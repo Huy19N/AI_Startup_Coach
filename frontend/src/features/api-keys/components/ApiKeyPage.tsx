@@ -60,8 +60,11 @@ export const ApiKeyPage = () => {
                           {key.provider}
                         </span>
                       </div>
-                      <div className="text-sm text-muted-foreground mt-1 flex items-center gap-2">
-                        Key: <code className="px-2 py-1 bg-muted rounded text-xs tracking-wider">{key.keyPrefix}****************</code>
+                      <div className="text-sm text-muted-foreground mt-1 flex flex-col gap-1">
+                        <div>Key: <code className="px-2 py-1 bg-muted rounded text-xs tracking-wider">{key.maskedKey}</code></div>
+                        {key.defaultModel && (
+                          <div>Model: <code className="px-2 py-1 bg-muted rounded text-xs tracking-wider text-primary">{key.defaultModel}</code></div>
+                        )}
                       </div>
                     </div>
                     <button

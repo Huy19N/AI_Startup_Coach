@@ -12,10 +12,12 @@ namespace AIStartupCoach.API.Controllers;
 public class ApiKeysController : ControllerBase
 {
     private readonly IApiKeyService _apiKeyService;
+    private readonly ILlmService _llmService;
 
-    public ApiKeysController(IApiKeyService apiKeyService)
+    public ApiKeysController(IApiKeyService apiKeyService, ILlmService llmService)
     {
         _apiKeyService = apiKeyService;
+        _llmService = llmService;
     }
 
     private string UserId => User.FindFirstValue(ClaimTypes.NameIdentifier)!;
@@ -42,5 +44,31 @@ public class ApiKeysController : ControllerBase
             return NotFound();
 
         return NoContent();
+    }
+
+    [HttpPost("verify")]
+    public async Task<ActionResult> VerifyApiKey([FromBody] VerifyApiKeyRequest request)
+    {
+        try
+        {
+            var systemPrompt = "You are a tester. You must reply only with the word 'OK'.";
+            var messages = new List<LlmMessage>
+            {
+                new LlmMessage { Role = "User", Content = "Test connection." }
+            };
+            
+            var response = await _llmService.SendMessageAsync(request.Provider, request.ApiKey, request.DefaultModel, systemPrompt, messages);
+            
+            if (string.IsNullOrWhiteSpace(response))
+            {
+                return BadRequest(new { message = "Empty response from provider" });
+            }
+
+            return Ok(new { success = true });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = $"Verification failed: {ex.Message}" });
+        }
     }
 }

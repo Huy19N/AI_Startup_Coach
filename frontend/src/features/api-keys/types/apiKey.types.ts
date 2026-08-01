@@ -1,7 +1,10 @@
 export interface ApiKey {
-  id: string;
+  id: number;
   provider: string;
-  keyPrefix: string;
+  maskedKey: string;
+  displayName: string;
+  defaultModel?: string;
+  isActive: boolean;
   createdAt: string;
 }
 

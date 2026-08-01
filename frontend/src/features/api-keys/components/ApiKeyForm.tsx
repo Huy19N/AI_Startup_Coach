@@ -6,15 +6,26 @@ import { KeyRound, Plus } from 'lucide-react';
 export const ApiKeyForm = () => {
   const [provider, setProvider] = useState(PROVIDERS[0].id);
   const [keyValue, setKeyValue] = useState('');
-  const { createKey, isLoading } = useApiKeys();
+  const [defaultModel, setDefaultModel] = useState('');
+  const [verifyStatus, setVerifyStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const { createKey, verifyKey, isLoading } = useApiKeys();
+
+  const handleVerify = async () => {
+    if (!keyValue.trim()) return;
+    setVerifyStatus('idle');
+    const success = await verifyKey(provider, keyValue, defaultModel);
+    setVerifyStatus(success ? 'success' : 'error');
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!keyValue.trim()) return;
     
-    const success = await createKey(provider, keyValue);
+    const success = await createKey(provider, keyValue, defaultModel);
     if (success) {
       setKeyValue('');
+      setDefaultModel('');
+      setVerifyStatus('idle');
     }
   };
 
@@ -24,14 +35,19 @@ export const ApiKeyForm = () => {
         <KeyRound className="w-5 h-5 text-primary" />
         Thêm API Key mới
       </h2>
-      <div className="flex flex-col sm:flex-row gap-4 items-end">
-        <div className="flex-1 w-full space-y-2">
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row gap-4 items-end">
+          <div className="flex-1 w-full space-y-2">
           <label className="text-sm font-medium" htmlFor="provider">Nhà cung cấp AI (Provider)</label>
           <select
             id="provider"
             className="w-full px-3 py-2 border border-input rounded-md bg-transparent focus:outline-none focus:ring-2 focus:ring-primary/50"
             value={provider}
-            onChange={(e) => setProvider(e.target.value)}
+            onChange={(e) => {
+              setProvider(e.target.value);
+              // Clear default model when changing provider
+              setDefaultModel('');
+            }}
           >
             {PROVIDERS.map((p) => (
               <option key={p.id} value={p.id} className="bg-background">
@@ -46,17 +62,31 @@ export const ApiKeyForm = () => {
             id="keyValue"
             type="password"
             required
-            className="w-full px-3 py-2 border border-input rounded-md bg-transparent focus:outline-none focus:ring-2 focus:ring-primary/50"
+            className={`w-full px-3 py-2 border rounded-md bg-transparent focus:outline-none focus:ring-2 focus:ring-primary/50 ${
+              verifyStatus === 'success' ? 'border-green-500' : verifyStatus === 'error' ? 'border-red-500' : 'border-input'
+            }`}
             placeholder="Nhập API Key của bạn"
             value={keyValue}
-            onChange={(e) => setKeyValue(e.target.value)}
+            onChange={(e) => {
+              setKeyValue(e.target.value);
+              setVerifyStatus('idle');
+            }}
           />
         </div>
-        <button
-          type="submit"
-          disabled={isLoading || !keyValue.trim()}
-          className="w-full sm:w-auto flex items-center justify-center gap-2 bg-primary text-primary-foreground py-2 px-6 rounded-md font-medium hover:bg-primary/90 transition-colors disabled:opacity-70 h-[42px]"
-        >
+        <div className="flex gap-2 w-full sm:w-auto">
+          <button
+            type="button"
+            onClick={handleVerify}
+            disabled={isLoading || !keyValue.trim()}
+            className="flex-1 sm:flex-none flex items-center justify-center bg-secondary text-secondary-foreground py-2 px-4 rounded-md font-medium hover:bg-secondary/80 transition-colors disabled:opacity-70 h-[42px]"
+          >
+            Kiểm tra
+          </button>
+          <button
+            type="submit"
+            disabled={isLoading || !keyValue.trim()}
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-primary text-primary-foreground py-2 px-6 rounded-md font-medium hover:bg-primary/90 transition-colors disabled:opacity-70 h-[42px]"
+          >
           {isLoading ? (
              <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
           ) : (
@@ -66,7 +96,31 @@ export const ApiKeyForm = () => {
             </>
           )}
         </button>
+          </div>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-4 items-end">
+          <div className="w-full sm:w-1/2 space-y-2">
+            <label className="text-sm font-medium" htmlFor="defaultModel">Model Name (Tuỳ chọn)</label>
+            <input
+              id="defaultModel"
+              type="text"
+              className="w-full px-3 py-2 border rounded-md bg-transparent focus:outline-none focus:ring-2 focus:ring-primary/50 border-input"
+              placeholder={provider === 'gemini' ? 'Ví dụ: gemini-1.5-pro' : provider === 'openai' ? 'Ví dụ: gpt-4o' : 'Tên model cụ thể'}
+              value={defaultModel}
+              onChange={(e) => {
+                setDefaultModel(e.target.value);
+                setVerifyStatus('idle');
+              }}
+            />
+          </div>
+        </div>
       </div>
+      {verifyStatus === 'success' && (
+        <p className="text-sm text-green-500 mt-2 font-medium">API Key hợp lệ!</p>
+      )}
+      {verifyStatus === 'error' && (
+        <p className="text-sm text-red-500 mt-2 font-medium">API Key không hợp lệ hoặc không có quyền truy cập.</p>
+      )}
       <p className="text-xs text-muted-foreground mt-3 flex items-center gap-1">
         * API Key của bạn được mã hóa an toàn (AES-256) trước khi lưu trữ và chỉ được dùng để gọi AI.
       </p>

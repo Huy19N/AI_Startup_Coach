@@ -74,9 +74,9 @@ public class ChatService : IChatService
             throw new UnauthorizedAccessException("Không có quyền truy cập cuộc trò chuyện này");
 
         // Get API key for the requested provider
-        var apiKey = await _apiKeyService.GetDecryptedKeyAsync(userId, request.Provider);
+        var (apiKey, model) = await _apiKeyService.GetApiKeyDetailsAsync(userId, request.Provider);
         if (string.IsNullOrEmpty(apiKey))
-            throw new InvalidOperationException($"Không tìm thấy API key cho {request.Provider}. Vui lòng thêm trong cài đặt.");
+            throw new UnauthorizedAccessException($"Không tìm thấy API Key khả dụng cho nhà cung cấp '{request.Provider}'. Vui lòng thêm API Key trước khi chat.");
 
         // Get chat history for context
         var history = await _chatRepository.GetMessagesBySessionIdAsync(sessionId);
@@ -110,7 +110,7 @@ public class ChatService : IChatService
         string aiResponseText;
         try
         {
-            aiResponseText = await _llmService.SendMessageAsync(request.Provider, apiKey, systemPrompt, llmMessages);
+            aiResponseText = await _llmService.SendMessageAsync(request.Provider, apiKey, model, systemPrompt, llmMessages);
         }
         catch (Exception ex)
         {

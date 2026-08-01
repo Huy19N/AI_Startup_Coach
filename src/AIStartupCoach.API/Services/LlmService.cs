@@ -12,14 +12,14 @@ public class LlmService : ILlmService
         _providers = providers;
     }
 
-    public async Task<string> SendMessageAsync(string providerName, string apiKey, string systemPrompt, List<LlmMessage> messages)
+    public async Task<string> SendMessageAsync(string providerName, string apiKey, string model, string systemPrompt, List<LlmMessage> messages)
     {
         var provider = _providers.FirstOrDefault(p => p.ProviderName.Equals(providerName, StringComparison.OrdinalIgnoreCase));
         
         if (provider == null)
             throw new NotSupportedException($"Provider '{providerName}' is not supported.");
 
-        return await provider.SendAsync(apiKey, systemPrompt, messages);
+        return await provider.SendAsync(apiKey, model, systemPrompt, messages);
     }
 
     public List<string> GetSupportedProviders()

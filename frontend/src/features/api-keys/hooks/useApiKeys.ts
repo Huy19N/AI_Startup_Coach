@@ -17,10 +17,10 @@ export const useApiKeys = () => {
     }
   }, [setKeys, setLoading, setError]);
 
-  const createKey = async (provider: string, keyValue: string) => {
+  const createKey = async (provider: string, keyValue: string, defaultModel?: string) => {
     setLoading(true);
     try {
-      const data = await apiKeyService.addKey(provider, keyValue);
+      const data = await apiKeyService.addKey(provider, keyValue, defaultModel);
       addKey(data);
       return true;
     } catch (err: any) {
@@ -31,10 +31,10 @@ export const useApiKeys = () => {
     }
   };
 
-  const deleteKey = async (id: string) => {
+  const deleteKey = async (id: number) => {
     setLoading(true);
     try {
-      await apiKeyService.deleteKey(id);
+      await apiKeyService.deleteKey(id.toString());
       removeKey(id);
       return true;
     } catch (err: any) {
@@ -45,5 +45,17 @@ export const useApiKeys = () => {
     }
   };
 
-  return { keys, isLoading, error, fetchKeys, createKey, deleteKey };
+  const verifyKey = async (provider: string, keyValue: string, defaultModel?: string) => {
+    setLoading(true);
+    try {
+      return await apiKeyService.verifyKey(provider, keyValue, defaultModel);
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Lỗi khi xác thực API key');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { keys, isLoading, error, fetchKeys, createKey, deleteKey, verifyKey };
 };

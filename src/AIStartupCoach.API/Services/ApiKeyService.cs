@@ -46,6 +46,7 @@ public class ApiKeyService : IApiKeyService
             DisplayName = string.IsNullOrEmpty(request.DisplayName)
                 ? $"{request.Provider} API Key"
                 : request.DisplayName,
+            DefaultModel = request.DefaultModel ?? string.Empty,
             IsActive = true,
             CreatedAt = DateTime.UtcNow
         };
@@ -72,6 +73,15 @@ public class ApiKeyService : IApiKeyService
         return _encryptionHelper.Decrypt(apiKey.EncryptedKey);
     }
 
+    public async Task<(string? ApiKey, string? DefaultModel)> GetApiKeyDetailsAsync(string userId, string provider)
+    {
+        var apiKey = await _repository.GetByUserAndProviderAsync(userId, provider);
+        if (apiKey == null || !apiKey.IsActive)
+            return (null, null);
+
+        return (_encryptionHelper.Decrypt(apiKey.EncryptedKey), apiKey.DefaultModel);
+    }
+
     private static ApiKeyResponse MapToResponse(ApiKey apiKey)
     {
         return new ApiKeyResponse
@@ -80,6 +90,7 @@ public class ApiKeyService : IApiKeyService
             Provider = apiKey.Provider,
             MaskedKey = MaskKey(apiKey.EncryptedKey),
             DisplayName = apiKey.DisplayName,
+            DefaultModel = apiKey.DefaultModel,
             IsActive = apiKey.IsActive,
             CreatedAt = apiKey.CreatedAt
         };

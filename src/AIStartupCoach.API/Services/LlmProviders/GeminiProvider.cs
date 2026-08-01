@@ -15,7 +15,7 @@ public class GeminiProvider : ILlmProvider
 
     public string ProviderName => "gemini";
 
-    public async Task<string> SendAsync(string apiKey, string systemPrompt, List<LlmMessage> messages)
+    public async Task<string> SendAsync(string apiKey, string model, string systemPrompt, List<LlmMessage> messages)
     {
         var contents = new List<object>();
 
@@ -41,7 +41,11 @@ public class GeminiProvider : ILlmProvider
             generationConfig = new { temperature = 0.7 }
         };
 
-        var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={apiKey}";
+        if (string.IsNullOrWhiteSpace(model))
+        {
+            model = "gemini-1.5-flash";
+        }
+        var url = $"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={apiKey}";
         
         var request = new HttpRequestMessage(HttpMethod.Post, url);
         request.Content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");

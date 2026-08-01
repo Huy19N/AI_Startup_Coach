@@ -8,4 +8,5 @@ public interface IApiKeyService
     Task<ApiKeyResponse> CreateApiKeyAsync(string userId, CreateApiKeyRequest request);
     Task<bool> DeleteApiKeyAsync(string userId, int apiKeyId);
     Task<string?> GetDecryptedKeyAsync(string userId, string provider);
+    Task<(string? ApiKey, string? DefaultModel)> GetApiKeyDetailsAsync(string userId, string provider);
 }

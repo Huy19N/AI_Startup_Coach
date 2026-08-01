@@ -16,7 +16,7 @@ public class ClaudeProvider : ILlmProvider
 
     public string ProviderName => "claude";
 
-    public async Task<string> SendAsync(string apiKey, string systemPrompt, List<LlmMessage> messages)
+    public async Task<string> SendAsync(string apiKey, string model, string systemPrompt, List<LlmMessage> messages)
     {
         var requestMessages = new List<object>();
 
@@ -25,9 +25,13 @@ public class ClaudeProvider : ILlmProvider
             requestMessages.Add(new { role = msg.Role, content = msg.Content });
         }
 
+        if (string.IsNullOrWhiteSpace(model))
+        {
+            model = "claude-3-haiku-20240307";
+        }
         var requestBody = new
         {
-            model = "claude-3-haiku-20240307", // Fast model
+            model = model, // Fast model
             system = systemPrompt,
             messages = requestMessages,
             max_tokens = 4096,

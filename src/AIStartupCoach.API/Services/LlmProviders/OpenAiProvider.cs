@@ -16,7 +16,7 @@ public class OpenAiProvider : ILlmProvider
 
     public string ProviderName => "openai";
 
-    public async Task<string> SendAsync(string apiKey, string systemPrompt, List<LlmMessage> messages)
+    public async Task<string> SendAsync(string apiKey, string model, string systemPrompt, List<LlmMessage> messages)
     {
         var requestMessages = new List<object>
         {
@@ -28,9 +28,13 @@ public class OpenAiProvider : ILlmProvider
             requestMessages.Add(new { role = msg.Role, content = msg.Content });
         }
 
+        if (string.IsNullOrWhiteSpace(model))
+        {
+            model = "gpt-4o-mini";
+        }
         var requestBody = new
         {
-            model = "gpt-4o-mini", // Default fast model
+            model = model, // Default fast model
             messages = requestMessages,
             temperature = 0.7
         };

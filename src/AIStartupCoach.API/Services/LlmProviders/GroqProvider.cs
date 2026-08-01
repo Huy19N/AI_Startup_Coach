@@ -16,7 +16,7 @@ public class GroqProvider : ILlmProvider
 
     public string ProviderName => "groq";
 
-    public async Task<string> SendAsync(string apiKey, string systemPrompt, List<LlmMessage> messages)
+    public async Task<string> SendAsync(string apiKey, string model, string systemPrompt, List<LlmMessage> messages)
     {
         var requestMessages = new List<object>
         {
@@ -28,9 +28,13 @@ public class GroqProvider : ILlmProvider
             requestMessages.Add(new { role = msg.Role, content = msg.Content });
         }
 
+        if (string.IsNullOrWhiteSpace(model))
+        {
+            model = "llama3-8b-8192";
+        }
         var requestBody = new
         {
-            model = "llama3-8b-8192", // Groq fast model
+            model = model, // Groq fast model
             messages = requestMessages,
             temperature = 0.7
         };

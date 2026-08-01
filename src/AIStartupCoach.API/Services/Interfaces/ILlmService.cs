@@ -2,7 +2,7 @@ namespace AIStartupCoach.API.Services.Interfaces;
 
 public interface ILlmService
 {
-    Task<string> SendMessageAsync(string provider, string apiKey, string systemPrompt, List<LlmMessage> messages);
+    Task<string> SendMessageAsync(string provider, string apiKey, string model, string systemPrompt, List<LlmMessage> messages);
     List<string> GetSupportedProviders();
 }
 

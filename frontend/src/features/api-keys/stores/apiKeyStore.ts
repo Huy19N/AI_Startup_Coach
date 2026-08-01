@@ -4,7 +4,7 @@ import { ApiKey, ApiKeyState } from '../types/apiKey.types';
 interface ApiKeyStore extends ApiKeyState {
   setKeys: (keys: ApiKey[]) => void;
   addKey: (key: ApiKey) => void;
-  removeKey: (id: string) => void;
+  removeKey: (id: number) => void;
   setLoading: (isLoading: boolean) => void;
   setError: (error: string | null) => void;
 }

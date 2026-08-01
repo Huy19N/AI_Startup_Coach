@@ -13,6 +13,9 @@ public class ApiKey
     [MaxLength(50)]
     public string Provider { get; set; } = string.Empty; // openai, gemini, claude, groq
 
+    [MaxLength(100)]
+    public string DefaultModel { get; set; } = string.Empty;
+
     [Required]
     public string EncryptedKey { get; set; } = string.Empty;
 

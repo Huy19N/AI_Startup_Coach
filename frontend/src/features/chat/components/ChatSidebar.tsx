@@ -40,7 +40,7 @@ export const ChatSidebar = () => {
               <div className="overflow-hidden">
                 <div className="font-medium truncate text-sm">{session.title}</div>
                 <div className="text-xs opacity-70 mt-1">
-                  {formatDistanceToNow(new Date(session.lastMessageAt), { addSuffix: true, locale: vi })}
+                  {session.lastMessageAt ? formatDistanceToNow(new Date(session.lastMessageAt), { addSuffix: true, locale: vi }) : ''}
                 </div>
               </div>
             </button>
