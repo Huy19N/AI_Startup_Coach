@@ -5,6 +5,18 @@ import { chatService } from '../services/chatService';
 export const useChat = () => {
   const store = useChatStore();
 
+  const loadSessionHistory = useCallback(async (sessionId: string) => {
+    store.setLoading(true);
+    try {
+      const data = await chatService.getSessionHistory(sessionId);
+      store.setMessages(data);
+    } catch (err: any) {
+      store.setError(err.response?.data?.message || 'Lỗi khi tải lịch sử chat');
+    } finally {
+      store.setLoading(false);
+    }
+  }, [store]);
+
   const fetchSessions = useCallback(async () => {
     store.setLoading(true);
     try {
@@ -19,19 +31,7 @@ export const useChat = () => {
     } finally {
       store.setLoading(false);
     }
-  }, [store]);
-
-  const loadSessionHistory = async (sessionId: string) => {
-    store.setLoading(true);
-    try {
-      const data = await chatService.getSessionHistory(sessionId);
-      store.setMessages(data);
-    } catch (err: any) {
-      store.setError(err.response?.data?.message || 'Lỗi khi tải lịch sử chat');
-    } finally {
-      store.setLoading(false);
-    }
-  };
+  }, [store, loadSessionHistory]);
 
   const selectSession = async (sessionId: string) => {
     const session = store.sessions.find(s => s.id === sessionId);
