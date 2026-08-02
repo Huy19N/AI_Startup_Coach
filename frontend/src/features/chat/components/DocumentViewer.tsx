@@ -1,8 +1,28 @@
-import React, { useState } from 'react';
-import { DocumentItem } from '../types/chat.types';
-import { FileText, Eye, X, Layers, Activity, Grid, Rocket, Target, Presentation, DollarSign } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
+import React, { useState, useEffect, useRef } from 'react';
+import { DocumentItem, DocumentVersionItem } from '../types/chat.types';
+import { 
+  FileText, 
+  Eye, 
+  X, 
+  Layers, 
+  Activity, 
+  Grid, 
+  Rocket, 
+  Target, 
+  Presentation, 
+  DollarSign,
+  Save,
+  Download,
+  History,
+  Printer,
+  Loader2,
+  Check
+} from 'lucide-react';
 import { Disclaimer } from '@/shared/components/Disclaimer';
+import { RichTextEditor } from '@/shared/components/RichTextEditor';
+import { documentService } from '../services/documentService';
+import { exportHtmlToDocx } from '../utils/exportUtils';
+import { marked } from 'marked';
 
 interface DocumentViewerProps {
   documents: DocumentItem[];
@@ -10,6 +30,87 @@ interface DocumentViewerProps {
 
 export const DocumentViewer: React.FC<DocumentViewerProps> = ({ documents }) => {
   const [selectedDoc, setSelectedDoc] = useState<DocumentItem | null>(null);
+  const [editorContent, setEditorContent] = useState<string>('');
+  const [showHistory, setShowHistory] = useState<boolean>(false);
+  const [versions, setVersions] = useState<DocumentVersionItem[]>([]);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
+  const [isLoadingVersions, setIsLoadingVersions] = useState<boolean>(false);
+  
+  const printRef = useRef<HTMLDivElement>(null);
+
+  // Synchronize editor content when selected document changes
+  useEffect(() => {
+    if (selectedDoc) {
+      // Convert markdown to HTML if needed
+      let html = selectedDoc.content;
+      if (!html.trim().startsWith('<')) {
+        html = marked.parse(selectedDoc.content) as string;
+      }
+      setEditorContent(html);
+      setShowHistory(false);
+    }
+  }, [selectedDoc]);
+
+  const handleOpenDoc = (doc: DocumentItem) => {
+    setSelectedDoc(doc);
+  };
+
+  const handleSaveVersion = async () => {
+    if (!selectedDoc) return;
+    setIsSaving(true);
+    try {
+      await documentService.createVersion(selectedDoc.id, editorContent);
+      selectedDoc.content = editorContent; // Update local ref
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 2000);
+      if (showHistory) {
+        fetchVersions();
+      }
+    } catch (err) {
+      console.error('Lỗi khi lưu phiên bản mới:', err);
+      alert('Không thể lưu phiên bản mới.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const fetchVersions = async () => {
+    if (!selectedDoc) return;
+    setIsLoadingVersions(true);
+    try {
+      const data = await documentService.getVersions(selectedDoc.id);
+      setVersions(data);
+    } catch (err) {
+      console.error('Lỗi khi tải lịch sử:', err);
+    } finally {
+      setIsLoadingVersions(false);
+    }
+  };
+
+  const toggleHistory = () => {
+    if (!showHistory) {
+      fetchVersions();
+    }
+    setShowHistory(!showHistory);
+  };
+
+  const handleSelectVersion = (version: DocumentVersionItem) => {
+    let html = version.content;
+    if (!html.trim().startsWith('<')) {
+      html = marked.parse(version.content) as string;
+    }
+    setEditorContent(html);
+  };
+
+  const handlePrintPdf = () => {
+    window.print();
+  };
+
+  const handleExportDocx = () => {
+    if (!selectedDoc) return;
+    exportHtmlToDocx(getDocLabel(selectedDoc.type), editorContent);
+  };
 
   const getDocIcon = (type: string) => {
     switch (type.toLowerCase()) {
@@ -64,7 +165,7 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({ documents }) => 
           {documents.map((doc) => (
             <div
               key={doc.id}
-              onClick={() => setSelectedDoc(doc)}
+              onClick={() => handleOpenDoc(doc)}
               className="group p-3 rounded-xl bg-card hover:bg-accent/50 border border-border/60 transition-all cursor-pointer flex items-center justify-between shadow-sm hover:shadow"
             >
               <div className="flex items-center gap-3">
@@ -89,31 +190,125 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({ documents }) => 
         </div>
       )}
 
-      {/* Modal View Full Document */}
+      {/* Modal Editor / Full View */}
       {selectedDoc && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-background border border-border rounded-2xl w-full max-w-3xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="p-4 border-b border-border flex items-center justify-between bg-muted/30">
+          <div className="bg-background border border-border rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="p-4 border-b border-border flex items-center justify-between bg-muted/30 flex-wrap gap-2">
               <div className="flex items-center gap-2">
                 {getDocIcon(selectedDoc.type)}
                 <h3 className="font-semibold text-lg">{getDocLabel(selectedDoc.type)}</h3>
               </div>
-              <button
-                onClick={() => setSelectedDoc(null)}
-                className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
+
+              <div className="flex items-center gap-2">
+                {/* Save Button */}
+                <button
+                  onClick={handleSaveVersion}
+                  disabled={isSaving}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+                  title="Lưu phiên bản mới"
+                >
+                  {isSaving ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : saveSuccess ? (
+                    <Check className="w-3.5 h-3.5" />
+                  ) : (
+                    <Save className="w-3.5 h-3.5" />
+                  )}
+                  <span>{saveSuccess ? 'Đã lưu!' : 'Lưu bản mới'}</span>
+                </button>
+
+                {/* Export Buttons */}
+                <button
+                  onClick={handleExportDocx}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
+                  title="Xuất Word (.docx)"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Word</span>
+                </button>
+
+                <button
+                  onClick={handlePrintPdf}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
+                  title="In / Xuất PDF"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  <span>PDF</span>
+                </button>
+
+                {/* Toggle History */}
+                <button
+                  onClick={toggleHistory}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors border ${
+                    showHistory 
+                      ? 'bg-accent border-accent text-accent-foreground' 
+                      : 'border-border hover:bg-muted text-muted-foreground'
+                  }`}
+                  title="Lịch sử phiên bản"
+                >
+                  <History className="w-3.5 h-3.5" />
+                  <span>Lịch sử</span>
+                </button>
+
+                <button
+                  onClick={() => setSelectedDoc(null)}
+                  className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6 space-y-4">
-              <article className="prose prose-sm dark:prose-invert max-w-none">
-                <ReactMarkdown>
-                  {selectedDoc.content}
-                </ReactMarkdown>
-              </article>
+            {/* Main Content Area + History Drawer */}
+            <div className="flex-1 overflow-hidden flex relative">
+              <div className="flex-1 overflow-y-auto p-6 space-y-4" ref={printRef}>
+                <RichTextEditor
+                  content={editorContent}
+                  onChange={(html) => setEditorContent(html)}
+                />
+              </div>
+
+              {/* History Drawer */}
+              {showHistory && (
+                <div className="w-64 border-l border-border bg-muted/20 flex flex-col p-4 space-y-3 overflow-y-auto animate-in slide-in-from-right duration-200">
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                    <History className="w-3.5 h-3.5" />
+                    <span>Lịch sử phiên bản</span>
+                  </h4>
+
+                  {isLoadingVersions ? (
+                    <div className="flex items-center justify-center p-6 text-muted-foreground">
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    </div>
+                  ) : versions.length === 0 ? (
+                    <p className="text-xs text-muted-foreground text-center py-4">
+                      Chưa có bản lưu nào trước đó.
+                    </p>
+                  ) : (
+                    <div className="flex flex-col gap-2">
+                      {versions.map((ver, idx) => (
+                        <div
+                          key={ver.id}
+                          onClick={() => handleSelectVersion(ver)}
+                          className="p-2.5 rounded-lg bg-card hover:bg-accent border border-border/50 text-xs transition-colors cursor-pointer"
+                        >
+                          <div className="font-medium text-foreground mb-0.5">
+                            Phiên bản #{versions.length - idx}
+                          </div>
+                          <div className="text-[11px] text-muted-foreground">
+                            {new Date(ver.createdAt).toLocaleString('vi-VN')}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
+            {/* Footer */}
             <div className="p-4 border-t border-border flex justify-between items-center bg-muted/20">
               <Disclaimer />
               <button

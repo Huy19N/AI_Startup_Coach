@@ -1,12 +1,26 @@
-
 import { render, screen, fireEvent } from '@testing-library/react';
 import { DocumentViewer } from '../DocumentViewer';
 import { DocumentItem } from '../../types/chat.types';
 
-// Mock ReactMarkdown since it can have issues in JSDOM without proper config
-jest.mock('react-markdown', () => (props: { children: string }) => <div>{props.children}</div>);
 jest.mock('@/shared/components/Disclaimer', () => ({
   Disclaimer: () => <div data-testid="disclaimer">Disclaimer Mock</div>
+}));
+
+jest.mock('@/shared/components/RichTextEditor', () => ({
+  RichTextEditor: ({ content }: { content: string }) => <div data-testid="rich-text-editor">{content}</div>
+}));
+
+jest.mock('../../services/documentService', () => ({
+  documentService: {
+    createVersion: jest.fn(),
+    getVersions: jest.fn().mockResolvedValue([]),
+  }
+}));
+
+jest.mock('marked', () => ({
+  marked: {
+    parse: (content: string) => content
+  }
 }));
 
 describe('DocumentViewer', () => {
@@ -24,23 +38,18 @@ describe('DocumentViewer', () => {
   it('renders document list with correct labels', () => {
     render(<DocumentViewer documents={mockDocuments} />);
     
-    // Check if original ones work
-    expect(screen.getByText('Lean Canvas')).toBeInTheDocument(); // Assuming we map it to "Lean Canvas" instead of "LeanCanvas"
-    expect(screen.getByText('Mô hình Kinh doanh (BMC)')).toBeInTheDocument(); // Assuming BMC maps to this
-    expect(screen.getByText('Kế hoạch MVP')).toBeInTheDocument(); // Assuming MVPPlan maps to this
+    expect(screen.getByText('Lean Canvas')).toBeInTheDocument();
+    expect(screen.getByText('Mô hình Kinh doanh (BMC)')).toBeInTheDocument();
+    expect(screen.getByText('Kế hoạch MVP')).toBeInTheDocument();
   });
 
   it('opens modal on document click and shows disclaimer', () => {
     render(<DocumentViewer documents={mockDocuments} />);
     
-    // Click on BMC document
     const bmcItem = screen.getByText('Mô hình Kinh doanh (BMC)');
     fireEvent.click(bmcItem);
     
-    // Check if modal opens with content
-    expect(screen.getByText('BMC Content')).toBeInTheDocument();
-    
-    // Check if disclaimer is rendered
+    expect(screen.getByTestId('rich-text-editor')).toHaveTextContent('BMC Content');
     expect(screen.getByTestId('disclaimer')).toBeInTheDocument();
   });
 });

@@ -6,6 +6,13 @@ export interface DocumentItem {
   createdAt: string;
 }
 
+export interface DocumentVersionItem {
+  id: number;
+  documentId: number;
+  content: string;
+  createdAt: string;
+}
+
 export interface ChatMessage {
   id: number | string;
   role: 'User' | 'AI' | 'user' | 'assistant';

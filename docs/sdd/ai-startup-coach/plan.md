@@ -56,9 +56,9 @@ Source: brainstorm.md (v1), constitution.md (v1.1.0)
 ### Group 3: Frontend Rich Text Editor (TDD)
 - [x] **T05** — Cài đặt thư viện Editor (vd: `@tiptap/react`, `@tiptap/starter-kit`) và thư viện parse markdown (`marked` hoặc tương tự).
 - [x] **T06** — Tạo component `RichTextEditor.tsx` có thanh công cụ (Bold, Italic, List). Viết test render component.
-- [ ] **T07** — Tích hợp `RichTextEditor` vào `DocumentViewer` thay thế ReactMarkdown hiện tại. Gắn sự kiện nút "Lưu" để gọi API `POST` lên backend.
+- [x] **T07** — Tích hợp `RichTextEditor` vào `DocumentViewer` thay thế ReactMarkdown hiện tại. Gắn sự kiện nút "Lưu" để gọi API `POST` lên backend.
 
 ### Group 4: Frontend Export & History (TDD)
 - [x] **T08** — Cài đặt các thư viện `react-to-print`, `html-to-docx`, `file-saver`.
-- [ ] **T09** — Viết các tiện ích (utils) hoặc components hỗ trợ xuất file PDF và DOCX. Cập nhật test.
-- [ ] **T10** — Thiết kế UI cho Version History (danh sách thời gian) trong `DocumentViewer` và liên kết với API `GET /versions`. Polish UI toàn bộ Modal.
+- [x] **T09** — Viết các tiện ích (utils) hoặc components hỗ trợ xuất file PDF và DOCX. Cập nhật test.
+- [x] **T10** — Thiết kế UI cho Version History (danh sách thời gian) trong `DocumentViewer` và liên kết với API `GET /versions`. Polish UI toàn bộ Modal.
