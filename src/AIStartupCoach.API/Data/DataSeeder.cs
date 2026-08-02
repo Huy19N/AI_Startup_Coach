@@ -40,6 +40,12 @@ public static class DataSeeder
                 await userManager.AddToRoleAsync(adminUser, "Admin");
             }
         }
+        else if (adminUser.AiQuota < 100)
+        {
+            // Auto-reset admin quota on startup
+            adminUser.AiQuota = 999999;
+            await userManager.UpdateAsync(adminUser);
+        }
 
         using var scope = serviceProvider.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
