@@ -157,6 +157,12 @@ public class ChatService : IChatService
                 CreatedAt = DateTime.UtcNow
             };
             var added = await _documentRepository.AddDocumentAsync(newDoc);
+            await _documentRepository.AddVersionAsync(new DocumentVersion
+            {
+                DocumentId = added.Id,
+                Content = added.Content,
+                CreatedAt = added.CreatedAt
+            });
             createdDocuments.Add(new DocumentResponse
             {
                 Id = added.Id,

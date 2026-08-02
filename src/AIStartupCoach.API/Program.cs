@@ -88,6 +88,7 @@ builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IApiKeyService, ApiKeyService>();
 builder.Services.AddScoped<IChatService, ChatService>();
+builder.Services.AddScoped<IDocumentService, DocumentService>();
 
 // LLM Providers
 builder.Services.AddScoped<ILlmProvider, OpenAiProvider>();
