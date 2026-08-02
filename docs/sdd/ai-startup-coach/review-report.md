@@ -1,38 +1,36 @@
-# SDD Code Review Report
+# Code Review Report: AI Startup Coach — Phase 3
 
-**Feature:** AI Startup Coach Phase 1 (Foundation + Auth + BYOK + Chat)
-**Date:** 2026-08-01
+Date: 2026-08-02
+Reviewer: AI Assistant (sdd-review-code)
+Feature: Phase 3 (Extended Startup Documents)
 
-## 1. Verifications Run
-- **Backend Tests:** `dotnet test` passed (8/8 tests).
-- **Frontend Build:** `npm run build` passed (Vite + TS type check).
-- **Frontend Lint:** `npm run lint` (Oxlint) passed with 0 errors, 0 warnings (Fixed one exhaustive-deps warning).
+## Verification Checklist
 
-## 2. Diff vs plan.md
-Tất cả 27 tasks trong `plan.md` đã được đối chiếu:
-- **Group 1-4 (Backend)**: Đã implement đầy đủ 3-layer architecture, authentication (JWT), mã hóa AES-256 cho API Keys, tích hợp 4 LLM providers (OpenAI, Gemini, Claude, Groq).
-- **Group 5-9 (Frontend)**: Đã implement cấu trúc FBA (Feature-Based Architecture). `LoginPage`, `RegisterPage`, `ApiKeyPage`, và `ChatPage` đều render chuẩn UI chuyên nghiệp với Tailwind v4. Interceptor Axios cho lỗi 401 hoạt động tốt.
+### 1. Build & Tests
+- **Backend Tests (`dotnet test`)**: ✅ Passed (13/13 tests)
+- **Frontend Tests (`npx jest`)**: ✅ Passed (3/3 tests) - *Tests explicitly verify rendering of new icons, labels, and the disclaimer.*
+- **Frontend Build (`npm run build`)**: ✅ Passed
+- **Frontend Lint (`npm run lint`)**: ✅ Passed (0 warnings, 0 errors)
 
-**Kết luận:** Đạt 100% Acceptance Criteria.
+### 2. Plan Compliance (`docs/sdd/ai-startup-coach/plan.md`)
+- **FR-31 & FR-32 (Prompt Updates)**: ✅ Hướng dẫn LLM trả về các thẻ `<document>` cho BMC, MVPPlan, MarketingStrategy, PitchOutline, FundraisingGuide đã được cập nhật thành công vào `system-prompt.md`.
+- **FR-33 (Document Viewer Icons & Labels)**: ✅ Đã bổ sung `getDocLabel` và `getDocIcon` để map chính xác các loại tài liệu mới sang tiếng Việt thân thiện và kèm icon tương ứng từ `lucide-react`.
+- **FR-34 (Disclaimer)**: ✅ Đã chèn component `<Disclaimer />` vào vị trí footer của modal xem tài liệu, tuân thủ yêu cầu bắt buộc.
 
-## 3. Diff vs constitution.md
-- **TDD:** Backend cover 100% features.
-- **Layered Architecture:** Chuẩn 3 lớp.
-- **Security:** Mật khẩu hash bằng Identity, API Keys mã hoá AES-256. 
-- **Disclaimer:** `Disclaimer.tsx` đã được render dưới mỗi tin nhắn AI trong `ChatMessage.tsx`.
-- **Vietnamese First:** Mọi UI string và System Prompt đều là tiếng Việt.
-- **HTTPS:** Chấp nhận ngoại lệ HTTP trên local.
+### 3. Constitution Compliance (`docs/sdd/constitution.md`)
+- **Principle 1 (TDD)**: ✅ Đã cấu hình và bổ sung unit test cho `DocumentViewer` vì framework trước đó chưa có setup test frontend. Code pass toàn bộ.
+- **Principle 3 (Template-Driven AI)**: ✅ XML Tags được duy trì và mở rộng.
+- **Principle 6 (AI Disclaimer)**: ✅ Modal document hiện đã có cảnh báo rủi ro (mang tính tham khảo).
+- **Principle 8 (FBA Frontend)**: ✅ Cấu trúc thư mục feature `chat` được bảo toàn.
+- **Principle 9 (Professional UI)**: ✅ Layout và components giữ đúng chuẩn chuyên nghiệp với các animation/hover states cũ, kết hợp bộ icon mới.
+- **Principle 10 (Clean Code)**: ✅ Xử lý fallback gracefully trong các switch/case (sử dụng `default` để tránh bug khi gặp document lạ).
 
-**Kết luận:** Code base tuân thủ chặt chẽ hiến pháp dự án.
+## Code Quality Read
+- **Error Handling**: Không có rủi ro phát sinh thêm ở backend do logic regex parse thẻ `<document>` đã được viết generic từ Phase 2.
+- **Edge cases**: `DocumentViewer` có xử lý `default` case cho type không xác định, ngăn crash frontend khi LLM trả về type lạ.
 
-## 4. Systematic Code Read
-- **Error Handling:** Backend bọc Exceptions kỹ càng trong Service. Frontend sử dụng Axios Interceptor xử lý global 401 và có trạng thái `error` trong Zustand store để hiển thị trên UI.
-- **Edge cases:** `ChatInput` block user gõ enter khi không có Provider, báo lỗi mềm mỏng và hiển thị hướng dẫn khi chưa có API Keys.
-- **State Management:** Zustand quản lý hiệu quả (không có stale closures nhờ config đúng `useCallback` deps).
+## Verdict
+**✅ Approved.** Mã nguồn hoàn toàn tuân thủ các quy chuẩn, pass 100% tests và bao phủ toàn bộ requirements của Phase 3.
 
-## 5. Findings
-- **Minor (Đã fix):** Thiếu dependency `loadSessionHistory` trong `useChat.ts` -> đã sửa.
-- Không phát hiện **Critical** hay **Important** issue nào.
-
-## 6. Verdict
-✅ **APPROVED** cho giai đoạn hiện tại. Code sạch, logic chạy ổn định và đáp ứng spec.
+## Handoff
+Sẵn sàng cho bước kiểm tra bảo mật cuối cùng trước khi hoàn tất feature.
