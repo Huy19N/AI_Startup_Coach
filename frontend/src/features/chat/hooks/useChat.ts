@@ -5,7 +5,7 @@ import { chatService } from '../services/chatService';
 export const useChat = () => {
   const store = useChatStore();
 
-  const loadSessionHistory = useCallback(async (sessionId: string) => {
+  const loadSessionHistory = useCallback(async (sessionId: string | number) => {
     const state = useChatStore.getState();
     state.setLoading(true);
     try {
@@ -35,7 +35,7 @@ export const useChat = () => {
     }
   }, [loadSessionHistory]);
 
-  const selectSession = async (sessionId: string) => {
+  const selectSession = async (sessionId: string | number) => {
     const state = useChatStore.getState();
     const session = state.sessions.find(s => s.id === sessionId);
     if (session) {
@@ -64,18 +64,31 @@ export const useChat = () => {
     if (!state.currentSession) return false;
     
     // Optimistic UI for user message
-    const tempId = Date.now().toString();
+    const tempId = Date.now();
     state.addMessage({
       id: tempId,
-      role: 'User',
+      role: 'user',
       content,
       createdAt: new Date().toISOString()
     });
 
     state.setSending(true);
     try {
-      const aiResponse = await chatService.sendMessage(state.currentSession.id, provider, content);
-      useChatStore.getState().addMessage(aiResponse);
+      const responseData = await chatService.sendMessage(state.currentSession.id, provider, content);
+      
+      // Update assistant message
+      useChatStore.getState().addMessage(responseData.assistantMessage);
+      
+      // Update Idea Summary if present
+      if (responseData.ideaSummary) {
+        useChatStore.getState().updateIdeaSummary(responseData.ideaSummary);
+      }
+
+      // Add new Documents if present
+      if (responseData.newDocuments && responseData.newDocuments.length > 0) {
+        useChatStore.getState().addDocuments(responseData.newDocuments);
+      }
+
       return true;
     } catch (err: any) {
       useChatStore.getState().setError(err.response?.data?.message || 'Lỗi khi gửi tin nhắn');

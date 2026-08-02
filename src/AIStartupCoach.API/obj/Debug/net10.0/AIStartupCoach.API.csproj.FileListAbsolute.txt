@@ -162,4 +162,3 @@ D:\Github\AI_Startup_Coach\src\AIStartupCoach.API\obj\Debug\net10.0\refint\AISta
 D:\Github\AI_Startup_Coach\src\AIStartupCoach.API\obj\Debug\net10.0\AIStartupCoach.API.pdb
 D:\Github\AI_Startup_Coach\src\AIStartupCoach.API\obj\Debug\net10.0\AIStartupCoach.API.genruntimeconfig.cache
 D:\Github\AI_Startup_Coach\src\AIStartupCoach.API\obj\Debug\net10.0\ref\AIStartupCoach.API.dll
-D:\Github\AI_Startup_Coach\src\AIStartupCoach.API\obj\Debug\net10.0\staticwebassets.upToDateCheck.txt

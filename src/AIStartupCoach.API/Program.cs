@@ -83,6 +83,7 @@ builder.Services.AddSingleton<IEncryptionHelper>(new EncryptionHelper(builder.Co
 
 builder.Services.AddScoped<IApiKeyRepository, ApiKeyRepository>();
 builder.Services.AddScoped<IChatRepository, ChatRepository>();
+builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IApiKeyService, ApiKeyService>();

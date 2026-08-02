@@ -1,5 +1,6 @@
 using AIStartupCoach.API.DTOs.Chat;
 using AIStartupCoach.API.Entities;
+using AIStartupCoach.API.Helpers;
 using AIStartupCoach.API.Repositories.Interfaces;
 using AIStartupCoach.API.Services.Interfaces;
 
@@ -10,12 +11,18 @@ public class ChatService : IChatService
     private readonly IChatRepository _chatRepository;
     private readonly IApiKeyService _apiKeyService;
     private readonly ILlmService _llmService;
+    private readonly IDocumentRepository _documentRepository;
 
-    public ChatService(IChatRepository chatRepository, IApiKeyService apiKeyService, ILlmService llmService)
+    public ChatService(
+        IChatRepository chatRepository, 
+        IApiKeyService apiKeyService, 
+        ILlmService llmService,
+        IDocumentRepository documentRepository)
     {
         _chatRepository = chatRepository;
         _apiKeyService = apiKeyService;
         _llmService = llmService;
+        _documentRepository = documentRepository;
     }
 
     public async Task<List<ChatSessionResponse>> GetUserSessionsAsync(string userId)
@@ -25,9 +32,18 @@ public class ChatService : IChatService
         {
             Id = s.Id,
             Title = s.Title,
+            IdeaSummary = s.IdeaSummary,
             CreatedAt = s.CreatedAt,
             UpdatedAt = s.UpdatedAt,
-            MessageCount = s.Messages.Count
+            MessageCount = s.Messages.Count,
+            Documents = s.Documents.Select(d => new DocumentResponse
+            {
+                Id = d.Id,
+                ChatSessionId = d.ChatSessionId,
+                Type = d.Type,
+                Content = d.Content,
+                CreatedAt = d.CreatedAt
+            }).ToList()
         }).ToList();
     }
 
@@ -45,9 +61,11 @@ public class ChatService : IChatService
         {
             Id = created.Id,
             Title = created.Title,
+            IdeaSummary = created.IdeaSummary,
             CreatedAt = created.CreatedAt,
             UpdatedAt = created.UpdatedAt,
-            MessageCount = 0
+            MessageCount = 0,
+            Documents = new List<DocumentResponse>()
         };
     }
 
@@ -117,12 +135,47 @@ public class ChatService : IChatService
             throw new InvalidOperationException($"Lỗi khi gọi {request.Provider}: {ex.Message}");
         }
 
+        // Parse XML Tags (IdeaSummary & Documents)
+        var newSummary = TagParserHelper.ExtractIdeaSummary(aiResponseText);
+        if (!string.IsNullOrWhiteSpace(newSummary))
+        {
+            session.IdeaSummary = newSummary;
+            session.UpdatedAt = DateTime.UtcNow;
+            await _chatRepository.UpdateSessionAsync(session);
+        }
+
+        var extractedDocs = TagParserHelper.ExtractDocuments(aiResponseText);
+        var createdDocuments = new List<DocumentResponse>();
+
+        foreach (var doc in extractedDocs)
+        {
+            var newDoc = new Document
+            {
+                ChatSessionId = sessionId,
+                Type = doc.Type,
+                Content = doc.Content,
+                CreatedAt = DateTime.UtcNow
+            };
+            var added = await _documentRepository.AddDocumentAsync(newDoc);
+            createdDocuments.Add(new DocumentResponse
+            {
+                Id = added.Id,
+                ChatSessionId = added.ChatSessionId,
+                Type = added.Type,
+                Content = added.Content,
+                CreatedAt = added.CreatedAt
+            });
+        }
+
+        // Clean output message by stripping special XML tags
+        var cleanedResponseText = TagParserHelper.StripTags(aiResponseText);
+
         // Save AI response to DB
         var aiMessage = new ChatMessage
         {
             ChatSessionId = sessionId,
             Role = "assistant",
-            Content = aiResponseText,
+            Content = cleanedResponseText,
             CreatedAt = DateTime.UtcNow
         };
         await _chatRepository.AddMessageAsync(aiMessage);
@@ -142,7 +195,9 @@ public class ChatService : IChatService
                 Role = aiMessage.Role,
                 Content = aiMessage.Content,
                 CreatedAt = aiMessage.CreatedAt
-            }
+            },
+            IdeaSummary = session.IdeaSummary,
+            NewDocuments = createdDocuments
         };
     }
 

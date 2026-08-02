@@ -1,5 +1,12 @@
 import axiosInstance from '@/shared/utils/axiosInstance';
-import { ChatMessage, ChatSession } from '../types/chat.types';
+import { ChatMessage, ChatSession, DocumentItem } from '../types/chat.types';
+
+export interface SendMessageResponseData {
+  userMessage: ChatMessage;
+  assistantMessage: ChatMessage;
+  ideaSummary?: string | null;
+  newDocuments?: DocumentItem[];
+}
 
 export const chatService = {
   async getSessions(): Promise<ChatSession[]> {
@@ -12,15 +19,15 @@ export const chatService = {
     return response.data;
   },
 
-  async getSessionHistory(sessionId: string): Promise<ChatMessage[]> {
+  async getSessionHistory(sessionId: string | number): Promise<ChatMessage[]> {
     const response = await axiosInstance.get(`/chat/sessions/${sessionId}/history`);
     return response.data;
   },
 
-  async sendMessage(sessionId: string, provider: string, content: string): Promise<ChatMessage> {
-    const response = await axiosInstance.post(`/chat/sessions/${sessionId}/message`, {
+  async sendMessage(sessionId: string | number, provider: string, message: string): Promise<SendMessageResponseData> {
+    const response = await axiosInstance.post(`/chat/sessions/${sessionId}/messages`, {
       provider,
-      content,
+      message,
     });
     return response.data;
   },

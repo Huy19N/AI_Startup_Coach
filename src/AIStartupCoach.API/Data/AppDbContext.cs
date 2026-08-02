@@ -13,6 +13,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<ApiKey> ApiKeys { get; set; } = null!;
     public DbSet<ChatSession> ChatSessions { get; set; } = null!;
     public DbSet<ChatMessage> ChatMessages { get; set; } = null!;
+    public DbSet<Document> Documents { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -44,6 +45,16 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
             entity.HasIndex(e => e.ChatSessionId);
             entity.HasOne(e => e.ChatSession)
                   .WithMany(s => s.Messages)
+                  .HasForeignKey(e => e.ChatSessionId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Document configuration
+        builder.Entity<Document>(entity =>
+        {
+            entity.HasIndex(e => e.ChatSessionId);
+            entity.HasOne(e => e.ChatSession)
+                  .WithMany(s => s.Documents)
                   .HasForeignKey(e => e.ChatSessionId)
                   .OnDelete(DeleteBehavior.Cascade);
         });

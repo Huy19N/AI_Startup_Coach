@@ -20,6 +20,7 @@ public class ChatRepository : IChatRepository
         return await _context.ChatSessions
             .Where(s => s.UserId == userId)
             .Include(s => s.Messages)
+            .Include(s => s.Documents)
             .OrderByDescending(s => s.UpdatedAt ?? s.CreatedAt)
             .ToListAsync();
     }
@@ -28,6 +29,7 @@ public class ChatRepository : IChatRepository
     {
         return await _context.ChatSessions
             .Include(s => s.Messages.OrderBy(m => m.CreatedAt))
+            .Include(s => s.Documents)
             .FirstOrDefaultAsync(s => s.Id == id);
     }
 
