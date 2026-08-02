@@ -9,4 +9,6 @@ public interface IDocumentRepository
     Task<Document> AddDocumentAsync(Document document);
     Task UpdateDocumentAsync(Document document);
     Task<bool> DeleteDocumentAsync(int id);
+    Task<DocumentVersion> AddVersionAsync(DocumentVersion version);
+    Task<List<DocumentVersion>> GetVersionsByDocumentIdAsync(int documentId);
 }

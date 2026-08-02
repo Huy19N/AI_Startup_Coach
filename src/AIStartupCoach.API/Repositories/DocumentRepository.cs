@@ -49,4 +49,19 @@ public class DocumentRepository : IDocumentRepository
         await _context.SaveChangesAsync();
         return true;
     }
+
+    public async Task<DocumentVersion> AddVersionAsync(DocumentVersion version)
+    {
+        _context.DocumentVersions.Add(version);
+        await _context.SaveChangesAsync();
+        return version;
+    }
+
+    public async Task<List<DocumentVersion>> GetVersionsByDocumentIdAsync(int documentId)
+    {
+        return await _context.DocumentVersions
+            .Where(v => v.DocumentId == documentId)
+            .OrderByDescending(v => v.CreatedAt)
+            .ToListAsync();
+    }
 }

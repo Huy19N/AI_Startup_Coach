@@ -47,7 +47,7 @@ Source: brainstorm.md (v1), constitution.md (v1.1.0)
 
 ### Group 1: Backend Database & Entities (TDD)
 - [x] **T01** — Cập nhật Entity `Document` (thêm collection `Versions`) và tạo `DocumentVersion` Entity. Cấu hình EF Core, tạo Migration & Update Database.
-- [ ] **T02** — Cập nhật `IDocumentRepository`: thêm method `AddVersionAsync` và `GetVersionsAsync`. Viết tests kiểm chứng EF Core behavior.
+- [x] **T02** — Cập nhật `IDocumentRepository`: thêm method `AddVersionAsync` và `GetVersionsAsync`. Viết tests kiểm chứng EF Core behavior.
 - [ ] **T03** — Tạo `IDocumentService` / `DocumentService` để xử lý logic: khi AI tạo document mới, đồng thời tự insert version đầu tiên vào lịch sử. Khi user gọi API, tạo version tiếp theo.
 
 ### Group 2: Backend API (TDD)
