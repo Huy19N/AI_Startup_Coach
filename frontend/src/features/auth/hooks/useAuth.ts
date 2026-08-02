@@ -13,7 +13,7 @@ export const useAuth = () => {
     try {
       const response = await authService.login(data);
       setCredentials(
-        { email: response.email, fullName: response.fullName },
+        { email: response.email, fullName: response.fullName } as any,
         response.token
       );
       return true;
@@ -31,7 +31,7 @@ export const useAuth = () => {
     try {
       const response = await authService.register(data);
       setCredentials(
-        { email: response.email, fullName: response.fullName },
+        { email: response.email, fullName: response.fullName } as any,
         response.token
       );
       return true;

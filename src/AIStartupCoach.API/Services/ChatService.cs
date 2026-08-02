@@ -1,6 +1,7 @@
 using AIStartupCoach.API.DTOs.Chat;
 using AIStartupCoach.API.Entities;
 using AIStartupCoach.API.Helpers;
+using Microsoft.AspNetCore.Identity;
 using AIStartupCoach.API.Repositories.Interfaces;
 using AIStartupCoach.API.Services.Interfaces;
 
@@ -12,17 +13,23 @@ public class ChatService : IChatService
     private readonly IApiKeyService _apiKeyService;
     private readonly ILlmService _llmService;
     private readonly IDocumentRepository _documentRepository;
+    private readonly UserManager<ApplicationUser> _userManager;
+    private readonly ITemplateRepository _templateRepository;
 
     public ChatService(
         IChatRepository chatRepository, 
         IApiKeyService apiKeyService, 
         ILlmService llmService,
-        IDocumentRepository documentRepository)
+        IDocumentRepository documentRepository,
+        UserManager<ApplicationUser> userManager,
+        ITemplateRepository templateRepository)
     {
         _chatRepository = chatRepository;
         _apiKeyService = apiKeyService;
         _llmService = llmService;
         _documentRepository = documentRepository;
+        _userManager = userManager;
+        _templateRepository = templateRepository;
     }
 
     public async Task<List<ChatSessionResponse>> GetUserSessionsAsync(string userId)
@@ -33,6 +40,7 @@ public class ChatService : IChatService
             Id = s.Id,
             Title = s.Title,
             IdeaSummary = s.IdeaSummary,
+            Stage = s.Stage,
             CreatedAt = s.CreatedAt,
             UpdatedAt = s.UpdatedAt,
             MessageCount = s.Messages.Count,
@@ -53,6 +61,7 @@ public class ChatService : IChatService
         {
             UserId = userId,
             Title = string.IsNullOrWhiteSpace(request.Title) ? "Cuộc trò chuyện mới" : request.Title,
+            Stage = "clarifying",
             CreatedAt = DateTime.UtcNow
         };
 
@@ -62,6 +71,7 @@ public class ChatService : IChatService
             Id = created.Id,
             Title = created.Title,
             IdeaSummary = created.IdeaSummary,
+            Stage = created.Stage,
             CreatedAt = created.CreatedAt,
             UpdatedAt = created.UpdatedAt,
             MessageCount = 0,
@@ -96,6 +106,14 @@ public class ChatService : IChatService
         if (string.IsNullOrEmpty(apiKey))
             throw new UnauthorizedAccessException($"Không tìm thấy API Key khả dụng cho nhà cung cấp '{request.Provider}'. Vui lòng thêm API Key trước khi chat.");
 
+        // Check quota
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null)
+            throw new UnauthorizedAccessException("Không tìm thấy người dùng");
+
+        if (user.AiQuota <= 0)
+            throw new InvalidOperationException("Bạn đã hết lượt gọi AI. Vui lòng nâng cấp tài khoản hoặc liên hệ quản trị viên.");
+
         // Get chat history for context
         var history = await _chatRepository.GetMessagesBySessionIdAsync(sessionId);
         var llmMessages = history.Select(m => new LlmMessage { Role = m.Role, Content = m.Content }).ToList();
@@ -121,14 +139,29 @@ public class ChatService : IChatService
             await _chatRepository.UpdateSessionAsync(session);
         }
 
+        // Update stage if provided
+        if (!string.IsNullOrEmpty(request.TargetStage))
+        {
+            var validStages = new[] { "clarifying", "planning", "executing" };
+            if (!validStages.Contains(request.TargetStage))
+                throw new ArgumentException($"TargetStage không hợp lệ. Các giá trị cho phép: {string.Join(", ", validStages)}");
+
+            session.Stage = request.TargetStage;
+            session.UpdatedAt = DateTime.UtcNow;
+            await _chatRepository.UpdateSessionAsync(session);
+        }
+
         // Get system prompt
-        string systemPrompt = await GetSystemPromptAsync();
+        string systemPrompt = await GetSystemPromptAsync(session.Stage);
+
+        int llmCallCount = 0;
 
         // Call LLM
         string aiResponseText;
         try
         {
             aiResponseText = await _llmService.SendMessageAsync(request.Provider, apiKey, model ?? string.Empty, systemPrompt, llmMessages);
+            llmCallCount++;
         }
         catch (Exception ex)
         {
@@ -145,6 +178,36 @@ public class ChatService : IChatService
         }
 
         var extractedDocs = TagParserHelper.ExtractDocuments(aiResponseText);
+
+        // Safety Review (Cách B)
+        bool needsSafetyReview = extractedDocs.Any(d => d.Type == "FundraisingGuide" || d.Type == "PitchOutline");
+        if (needsSafetyReview)
+        {
+            string safetyPrompt = await GetSafetyReviewPromptAsync();
+            var safetyMessages = new List<LlmMessage>
+            {
+                new LlmMessage { Role = "user", Content = $"Đây là kết quả dự thảo cần duyệt:\n\n{aiResponseText}" }
+            };
+            
+            try
+            {
+                string safetyResponse = await _llmService.SendMessageAsync(request.Provider, apiKey, model ?? string.Empty, safetyPrompt, safetyMessages);
+                llmCallCount++;
+                if (!safetyResponse.Contains("PASS"))
+                {
+                    llmMessages.Add(new LlmMessage { Role = "assistant", Content = aiResponseText });
+                    llmMessages.Add(new LlmMessage { Role = "user", Content = $"Kết quả của bạn không vượt qua kiểm duyệt an toàn. Các lỗi cần sửa:\n{safetyResponse}\n\nHãy sinh lại toàn bộ câu trả lời, sửa các lỗi trên." });
+                    aiResponseText = await _llmService.SendMessageAsync(request.Provider, apiKey, model ?? string.Empty, systemPrompt, llmMessages);
+                    llmCallCount++;
+                    extractedDocs = TagParserHelper.ExtractDocuments(aiResponseText);
+                }
+            }
+            catch (Exception)
+            {
+                // Ignore safety review errors
+            }
+        }
+
         var createdDocuments = new List<DocumentResponse>();
 
         foreach (var doc in extractedDocs)
@@ -186,6 +249,10 @@ public class ChatService : IChatService
         };
         await _chatRepository.AddMessageAsync(aiMessage);
 
+        // Decrease Quota
+        user.AiQuota -= llmCallCount;
+        await _userManager.UpdateAsync(user);
+
         return new SendMessageResponse
         {
             UserMessage = new ChatMessageResponse
@@ -203,6 +270,7 @@ public class ChatService : IChatService
                 CreatedAt = aiMessage.CreatedAt
             },
             IdeaSummary = session.IdeaSummary,
+            Stage = session.Stage,
             NewDocuments = createdDocuments
         };
     }
@@ -216,15 +284,28 @@ public class ChatService : IChatService
         return await _chatRepository.DeleteSessionAsync(sessionId);
     }
 
-    private async Task<string> GetSystemPromptAsync()
+    private async Task<string> GetSystemPromptAsync(string stage)
     {
-        var path = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "system-prompt.md");
-        if (File.Exists(path))
+        var constitutionTemplate = await _templateRepository.GetActiveTemplateByTypeAsync("Constitution");
+        string constitution = constitutionTemplate?.SystemPrompt ?? "Bạn là AI Startup Coach.";
+
+        string phaseType = stage switch
         {
-            return await File.ReadAllTextAsync(path);
-        }
-        
-        // Fallback simple prompt
-        return "Bạn là AI Startup Coach. Hãy trả lời các câu hỏi về khởi nghiệp một cách ngắn gọn, súc tích và tuân theo định dạng markdown.";
+            "clarifying" => "CoachClarify",
+            "planning" => "CoachPlan",
+            "executing" => "CoachExecute",
+            _ => "CoachClarify"
+        };
+
+        var phaseTemplate = await _templateRepository.GetActiveTemplateByTypeAsync(phaseType);
+        string phasePrompt = phaseTemplate?.SystemPrompt ?? "";
+
+        return constitution + "\n\n---\n\n" + phasePrompt;
+    }
+
+    private async Task<string> GetSafetyReviewPromptAsync()
+    {
+        var template = await _templateRepository.GetActiveTemplateByTypeAsync("CoachSafetyReview");
+        return template?.SystemPrompt ?? "Bạn là một Safety Reviewer. Hãy duyệt kỹ tài liệu.";
     }
 }

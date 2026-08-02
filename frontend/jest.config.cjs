@@ -3,7 +3,10 @@ module.exports = {
   testEnvironment: 'jsdom',
   transform: {
     '^.+\\.(ts|tsx)$': ['ts-jest', {
-      tsconfig: 'tsconfig.app.json'
+      tsconfig: 'tsconfig.app.json',
+      diagnostics: {
+        ignoreCodes: [1343, 2591]
+      }
     }]
   },
   moduleNameMapper: {

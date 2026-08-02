@@ -5,6 +5,7 @@ using AIStartupCoach.API.Services;
 using AIStartupCoach.API.Services.Interfaces;
 using Moq;
 using Xunit;
+using Microsoft.AspNetCore.Identity;
 
 namespace AIStartupCoach.Tests.Services;
 
@@ -14,6 +15,8 @@ public class ChatServiceTests
     private readonly Mock<IApiKeyService> _mockApiKeyService;
     private readonly Mock<ILlmService> _mockLlmService;
     private readonly Mock<IDocumentRepository> _mockDocRepo;
+    private readonly Mock<UserManager<ApplicationUser>> _mockUserManager;
+    private readonly Mock<ITemplateRepository> _mockTemplateRepo;
     private readonly ChatService _service;
 
     public ChatServiceTests()
@@ -22,7 +25,12 @@ public class ChatServiceTests
         _mockApiKeyService = new Mock<IApiKeyService>();
         _mockLlmService = new Mock<ILlmService>();
         _mockDocRepo = new Mock<IDocumentRepository>();
-        _service = new ChatService(_mockChatRepo.Object, _mockApiKeyService.Object, _mockLlmService.Object, _mockDocRepo.Object);
+        _mockTemplateRepo = new Mock<ITemplateRepository>();
+        
+        var store = new Mock<IUserStore<ApplicationUser>>();
+        _mockUserManager = new Mock<UserManager<ApplicationUser>>(store.Object, null, null, null, null, null, null, null, null);
+        
+        _service = new ChatService(_mockChatRepo.Object, _mockApiKeyService.Object, _mockLlmService.Object, _mockDocRepo.Object, _mockUserManager.Object, _mockTemplateRepo.Object);
     }
 
     [Fact]
@@ -35,10 +43,12 @@ public class ChatServiceTests
         var session = new ChatSession { Id = sessionId, UserId = userId, Title = "Cuộc trò chuyện mới" };
         var apiKey = "sk-12345";
         var aiResponse = "Hi there, I am your coach.";
+        var user = new ApplicationUser { Id = userId, AiQuota = 50 };
 
         _mockChatRepo.Setup(r => r.GetSessionByIdAsync(sessionId)).ReturnsAsync(session);
         _mockApiKeyService.Setup(s => s.GetApiKeyDetailsAsync(userId, request.Provider)).ReturnsAsync((apiKey, "default-model"));
         _mockChatRepo.Setup(r => r.GetMessagesBySessionIdAsync(sessionId)).ReturnsAsync(new List<ChatMessage>());
+        _mockUserManager.Setup(m => m.FindByIdAsync(userId)).ReturnsAsync(user);
         
         _mockLlmService.Setup(s => s.SendMessageAsync(request.Provider, apiKey, It.IsAny<string>(), It.IsAny<string>(), It.IsAny<List<LlmMessage>>()))
             .ReturnsAsync(aiResponse);
@@ -72,10 +82,12 @@ public class ChatServiceTests
         var session = new ChatSession { Id = sessionId, UserId = userId, Title = "Session 1" };
         var apiKey = "sk-12345";
         var aiResponse = "Đã xong!\n<idea_summary>Tóm tắt về app 1</idea_summary>\n<document type=\"LeanCanvas\"># Canvas</document>";
+        var user = new ApplicationUser { Id = userId, AiQuota = 50 };
 
         _mockChatRepo.Setup(r => r.GetSessionByIdAsync(sessionId)).ReturnsAsync(session);
         _mockApiKeyService.Setup(s => s.GetApiKeyDetailsAsync(userId, request.Provider)).ReturnsAsync((apiKey, "default-model"));
         _mockChatRepo.Setup(r => r.GetMessagesBySessionIdAsync(sessionId)).ReturnsAsync(new List<ChatMessage>());
+        _mockUserManager.Setup(m => m.FindByIdAsync(userId)).ReturnsAsync(user);
         
         _mockLlmService.Setup(s => s.SendMessageAsync(request.Provider, apiKey, It.IsAny<string>(), It.IsAny<string>(), It.IsAny<List<LlmMessage>>()))
             .ReturnsAsync(aiResponse);
@@ -117,5 +129,58 @@ public class ChatServiceTests
             
         Assert.Contains("Không tìm thấy API Key", ex.Message);
         _mockLlmService.Verify(s => s.SendMessageAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<List<LlmMessage>>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task SendMessageAsync_WithEmptyQuota_ShouldThrowException()
+    {
+        // Arrange
+        var userId = "user1";
+        var sessionId = 1;
+        var request = new SendMessageRequest { Message = "Hello", Provider = "openai" };
+        var session = new ChatSession { Id = sessionId, UserId = userId };
+        
+        var user = new ApplicationUser { Id = userId, AiQuota = 0 };
+
+        _mockChatRepo.Setup(r => r.GetSessionByIdAsync(sessionId)).ReturnsAsync(session);
+        _mockApiKeyService.Setup(s => s.GetApiKeyDetailsAsync(userId, request.Provider)).ReturnsAsync(("sk-123", "default-model"));
+        _mockUserManager.Setup(m => m.FindByIdAsync(userId)).ReturnsAsync(user);
+
+        // Act & Assert
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => 
+            _service.SendMessageAsync(userId, sessionId, request));
+            
+        Assert.Contains("Bạn đã hết lượt gọi AI", ex.Message);
+    }
+
+    [Fact]
+    public async Task SendMessageAsync_ShouldDecreaseQuotaByOne()
+    {
+        // Arrange
+        var userId = "user1";
+        var sessionId = 1;
+        var request = new SendMessageRequest { Message = "Hello", Provider = "openai" };
+        var session = new ChatSession { Id = sessionId, UserId = userId, Title = "Cuộc trò chuyện mới" };
+        var apiKey = "sk-12345";
+        var aiResponse = "Hi there, I am your coach.";
+        var user = new ApplicationUser { Id = userId, AiQuota = 50 };
+
+        _mockChatRepo.Setup(r => r.GetSessionByIdAsync(sessionId)).ReturnsAsync(session);
+        _mockApiKeyService.Setup(s => s.GetApiKeyDetailsAsync(userId, request.Provider)).ReturnsAsync((apiKey, "default-model"));
+        _mockChatRepo.Setup(r => r.GetMessagesBySessionIdAsync(sessionId)).ReturnsAsync(new List<ChatMessage>());
+        _mockUserManager.Setup(m => m.FindByIdAsync(userId)).ReturnsAsync(user);
+        
+        _mockLlmService.Setup(s => s.SendMessageAsync(request.Provider, apiKey, It.IsAny<string>(), It.IsAny<string>(), It.IsAny<List<LlmMessage>>()))
+            .ReturnsAsync(aiResponse);
+
+        _mockChatRepo.Setup(r => r.AddMessageAsync(It.IsAny<ChatMessage>()))
+            .ReturnsAsync((ChatMessage msg) => { msg.Id = new Random().Next(1, 100); return msg; });
+
+        // Act
+        var result = await _service.SendMessageAsync(userId, sessionId, request);
+
+        // Assert
+        Assert.Equal(49, user.AiQuota);
+        _mockUserManager.Verify(m => m.UpdateAsync(user), Times.Once);
     }
 }

@@ -78,6 +78,9 @@ namespace AIStartupCoach.API.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
 
+                    b.Property<int>("AiQuota")
+                        .HasColumnType("int");
+
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
@@ -189,6 +192,11 @@ namespace AIStartupCoach.API.Migrations
                     b.Property<string>("IdeaSummary")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Stage")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -226,6 +234,12 @@ namespace AIStartupCoach.API.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("FeedbackText")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool?>("IsLiked")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -236,6 +250,37 @@ namespace AIStartupCoach.API.Migrations
                     b.HasIndex("ChatSessionId");
 
                     b.ToTable("Documents");
+                });
+
+            modelBuilder.Entity("AIStartupCoach.API.Entities.DocumentComment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("DocumentId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DocumentId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("DocumentComments");
                 });
 
             modelBuilder.Entity("AIStartupCoach.API.Entities.DocumentVersion", b =>
@@ -261,6 +306,34 @@ namespace AIStartupCoach.API.Migrations
                     b.HasIndex("DocumentId");
 
                     b.ToTable("DocumentVersions");
+                });
+
+            modelBuilder.Entity("AIStartupCoach.API.Entities.PromptTemplate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DocumentType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("SystemPrompt")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PromptTemplates");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -440,6 +513,25 @@ namespace AIStartupCoach.API.Migrations
                     b.Navigation("ChatSession");
                 });
 
+            modelBuilder.Entity("AIStartupCoach.API.Entities.DocumentComment", b =>
+                {
+                    b.HasOne("AIStartupCoach.API.Entities.Document", "Document")
+                        .WithMany("Comments")
+                        .HasForeignKey("DocumentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AIStartupCoach.API.Entities.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Document");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("AIStartupCoach.API.Entities.DocumentVersion", b =>
                 {
                     b.HasOne("AIStartupCoach.API.Entities.Document", "Document")
@@ -518,6 +610,8 @@ namespace AIStartupCoach.API.Migrations
 
             modelBuilder.Entity("AIStartupCoach.API.Entities.Document", b =>
                 {
+                    b.Navigation("Comments");
+
                     b.Navigation("Versions");
                 });
 #pragma warning restore 612, 618

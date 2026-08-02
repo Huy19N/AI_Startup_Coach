@@ -15,6 +15,8 @@ public class SendMessageRequest
 
     [Required(ErrorMessage = "Provider là bắt buộc")]
     public string Provider { get; set; } = string.Empty;
+
+    public string? TargetStage { get; set; }
 }
 
 public class DocumentResponse
@@ -31,6 +33,7 @@ public class ChatSessionResponse
     public int Id { get; set; }
     public string Title { get; set; } = string.Empty;
     public string? IdeaSummary { get; set; }
+    public string Stage { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public int MessageCount { get; set; }
@@ -50,5 +53,6 @@ public class SendMessageResponse
     public ChatMessageResponse UserMessage { get; set; } = null!;
     public ChatMessageResponse AssistantMessage { get; set; } = null!;
     public string? IdeaSummary { get; set; }
+    public string Stage { get; set; } = string.Empty;
     public List<DocumentResponse> NewDocuments { get; set; } = new();
 }

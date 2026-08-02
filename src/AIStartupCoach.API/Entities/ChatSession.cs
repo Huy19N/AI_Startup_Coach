@@ -14,6 +14,9 @@ public class ChatSession
 
     public string? IdeaSummary { get; set; }
 
+    [MaxLength(50)]
+    public string Stage { get; set; } = "clarifying";
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
 

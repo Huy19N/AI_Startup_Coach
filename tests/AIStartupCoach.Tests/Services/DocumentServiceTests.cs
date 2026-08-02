@@ -1,4 +1,6 @@
+using AIStartupCoach.API.DTOs.Chat;
 using AIStartupCoach.API.DTOs.Documents;
+using AIStartupCoach.API.Models.Requests;
 using AIStartupCoach.API.Entities;
 using AIStartupCoach.API.Repositories.Interfaces;
 using AIStartupCoach.API.Services;
@@ -69,5 +71,48 @@ public class DocumentServiceTests
         // Act & Assert
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
             service.CreateVersionAsync("other-user", docId, new CreateVersionRequest { Content = "New Content" }));
+    }
+
+    [Fact]
+    public async Task ProvideFeedbackAsync_ShouldUpdateDocumentAndReturnResponse_WhenUserIsAuthorized()
+    {
+        // Arrange
+        var userId = "user-1";
+        var docId = 10;
+        var sessionId = 100;
+
+        var document = new Document
+        {
+            Id = docId,
+            ChatSessionId = sessionId,
+            Type = "LeanCanvas",
+            Content = "Content"
+        };
+        var session = new ChatSession
+        {
+            Id = sessionId,
+            UserId = userId
+        };
+
+        _documentRepoMock.Setup(r => r.GetDocumentByIdAsync(docId)).ReturnsAsync(document);
+        _chatRepoMock.Setup(r => r.GetSessionByIdAsync(sessionId)).ReturnsAsync(session);
+
+        var service = new DocumentService(_documentRepoMock.Object, _chatRepoMock.Object);
+
+        var request = new DocumentFeedbackRequest
+        {
+            IsLiked = true,
+            FeedbackText = "Great generation!"
+        };
+
+        // Act
+        var result = await service.ProvideFeedbackAsync(docId, userId, request);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(docId, result.Id);
+        Assert.True(document.IsLiked);
+        Assert.Equal("Great generation!", document.FeedbackText);
+        _documentRepoMock.Verify(r => r.UpdateDocumentAsync(document), Times.Once);
     }
 }

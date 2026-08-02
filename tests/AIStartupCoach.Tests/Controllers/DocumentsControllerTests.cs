@@ -1,6 +1,8 @@
 using System.Security.Claims;
 using AIStartupCoach.API.Controllers;
+using AIStartupCoach.API.DTOs.Chat;
 using AIStartupCoach.API.DTOs.Documents;
+using AIStartupCoach.API.Models.Requests;
 using AIStartupCoach.API.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -75,5 +77,27 @@ public class DocumentsControllerTests
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
         var data = Assert.IsType<List<DocumentVersionResponse>>(okResult.Value);
         Assert.Single(data);
+    }
+    [Fact]
+    public async Task ProvideFeedback_ShouldReturnOkWithResponse_WhenSuccessful()
+    {
+        // Arrange
+        var userId = "user-123";
+        var docId = 5;
+        var request = new DocumentFeedbackRequest { IsLiked = true, FeedbackText = "Good" };
+        var response = new DocumentResponse { Id = docId, Type = "LeanCanvas", Content = "Content" };
+
+        _documentServiceMock.Setup(s => s.ProvideFeedbackAsync(docId, userId, request))
+            .ReturnsAsync(response);
+
+        var controller = CreateControllerWithUser(userId);
+
+        // Act
+        var result = await controller.ProvideFeedback(docId, request);
+
+        // Assert
+        var okResult = Assert.IsType<OkObjectResult>(result.Result);
+        var data = Assert.IsType<DocumentResponse>(okResult.Value);
+        Assert.Equal(docId, data.Id);
     }
 }

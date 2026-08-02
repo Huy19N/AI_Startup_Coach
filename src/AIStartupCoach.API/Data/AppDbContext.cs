@@ -15,6 +15,8 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<ChatMessage> ChatMessages { get; set; } = null!;
     public DbSet<Document> Documents { get; set; } = null!;
     public DbSet<DocumentVersion> DocumentVersions { get; set; } = null!;
+    public DbSet<DocumentComment> DocumentComments { get; set; } = null!;
+    public DbSet<PromptTemplate> PromptTemplates { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -68,6 +70,21 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
                   .WithMany(d => d.Versions)
                   .HasForeignKey(e => e.DocumentId)
                   .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // DocumentComment configuration
+        builder.Entity<DocumentComment>(entity =>
+        {
+            entity.HasIndex(e => e.DocumentId);
+            entity.HasOne(e => e.Document)
+                  .WithMany(d => d.Comments)
+                  .HasForeignKey(e => e.DocumentId)
+                  .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasOne(e => e.User)
+                  .WithMany() // Assuming no reverse navigation from ApplicationUser to Comments to keep it simple, or we can add it later
+                  .HasForeignKey(e => e.UserId)
+                  .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

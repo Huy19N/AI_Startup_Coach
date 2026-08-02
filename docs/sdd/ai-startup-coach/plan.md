@@ -1,64 +1,69 @@
-# Plan: AI Startup Coach — Phase 4 (Document Editor, Export, Version History)
+# Plan: AI Startup Coach — Phase 5 (Frontend UI) & Phase 6 (UI Polish & FE Features)
 
 Source: brainstorm.md (v1), constitution.md (v1.1.0)
 
 ## Spec summary
 ### Functional requirements
-1. **FR-41 (Rich Text Editor)**: Người dùng có thể chỉnh sửa nội dung tài liệu (Lean Canvas, SWOT, etc.) bằng một trình soạn thảo trực quan (WYSIWYG) thay vì phải sửa text thuần.
-2. **FR-42 (Version History)**: Hệ thống ghi nhận lịch sử các lần chỉnh sửa. Khi người dùng lưu (Save) tài liệu, một phiên bản (revision) mới được tạo và lưu trữ. Người dùng có thể xem lại danh sách các phiên bản cũ của một tài liệu.
-3. **FR-43 (Export)**: Người dùng có thể tải tài liệu về máy tính dưới định dạng PDF hoặc DOCX thông qua các nút thao tác trực tiếp trên giao diện Frontend (không phụ thuộc vào server-side rendering).
+1. **FR-61 (AuthStore & Roles/Quota Parsing)**: Decode JWT claims để lấy Roles (`Admin`, `Mentor`, `Student`) và `AiQuota`. Hiển thị badge AI Quota còn lại trên Navbar/Sidebar.
+2. **FR-62 (Admin Template Management UI)**: Giao diện `/admin/templates` bảo vệ bởi `AdminGuard`. Cho phép Admin xem danh sách, tạo mới, chỉnh sửa System Prompt cho từng loại tài liệu và toggle `IsActive`.
+3. **FR-63 (Mentor Review & Commenting UI)**: Tích hợp Drawer "Nhận xét & Review" trong `DocumentViewer`. Hiển thị danh sách nhận xét, cho phép Mentor/Student thêm comment mới theo real-time hoặc polling nhẹ.
+4. **FR-64 (Document Feedback System UI)**: Thêm bộ đánh giá Like/Dislike + ô nhập phản hồi văn bản ở chân trang `DocumentViewer`. Gửi dữ liệu về backend `POST /api/documents/{id}/feedback`.
+5. **FR-65 (Rich Text Editor & Client-Side Export)**: Nâng cấp `RichTextEditor` (WYSIWYG với TipTap/Toolbar), hỗ trợ định dạng trực quan. Xử lý xuất file DOCX và PDF hoàn toàn ở Frontend.
+6. **FR-66 (UI Final Polish - Sky Blue & White Theme + Animations)**: Áp dụng Theme chuẩn Xanh Sky & Trắng, Glassmorphism, Micro-animations, hiệu ứng hover/smooth transitions, responsive layout và AI Disclaimer nổi bật.
 
 ### Acceptance criteria
-- [ ] Mở một tài liệu sẽ hiển thị giao diện soạn thảo văn bản phong phú (in đậm, list, heading...).
-- [ ] Người dùng chỉnh sửa và nhấn "Lưu" -> Gọi API thành công, DB tạo ra bản ghi lịch sử mới.
-- [ ] Có nút "Lịch sử" để liệt kê và xem các phiên bản đã lưu trước đó của tài liệu.
-- [ ] Bấm nút "Xuất PDF" -> Trình duyệt bật hộp thoại in/lưu PDF nội dung tài liệu.
-- [ ] Bấm nút "Xuất DOCX" -> Tải xuống file `.docx` chứa nội dung đã soạn thảo.
+- [ ] Parse được roles & AI quota từ JWT trong `authStore`. Navbar hiển thị AI Quota (vd: `AI Quota: 49/50`).
+- [ ] Admin đăng nhập có menu "Quản lý Prompt" dẫn tới `/admin/templates`, hiển thị danh sách templates và modal/form sửa System Prompt. User thường truy cập vào `/admin/templates` sẽ bị redirect về `/`.
+- [x] Trong `DocumentViewer`, tab "Comments" cho phép xem danh sách nhận xét và gửi nhận xét mới.
+- [x] Trong `DocumentViewer`, khu vực Feedback ở cuối tài liệu hỗ trợ bấm Thumbs Up/Down và gửi FeedbackText về API thành công.
+- [x] `RichTextEditor` hiển thị thanh công cụ trực quan (Bold, Italic, Bullet List, Heading, Align). Xuất DOCX/PDF chạy mượt mà ở trình duyệt.
+- [x] Giao diện có màu Xanh Sky (`sky-500` / `#0284c7`) phối hợp với background Trắng tinh tế, hiệu ứng hiệu chỉnh animation chuyển trang/modal mượt mà.
 
 ---
 
 ## Constitution compliance check
 | Principle | Status | Notes |
 |---|---|---|
-| 1. TDD Mandatory | ✅ Complies | Mọi entity mới (`DocumentVersion`), API endpoint, và util xuất file đều phải có Unit Test đi kèm trước khi code. |
-| 2. Layered Architecture | ✅ Complies | Xây dựng theo cấu trúc chuẩn: `DocumentController` -> `IDocumentService` -> `IDocumentRepository`. |
-| 8. FBA Frontend | ✅ Complies | Các component mới (`RichTextEditor`, `ExportButtons`) sẽ được tổ chức gọn gàng trong feature `chat` hoặc `documents`. |
-| 9. Professional UI | ✅ Complies | Sử dụng thư viện Editor hiện đại (như Tiptap) để trải nghiệm gõ mượt mà như Notion. |
+| 1. TDD Mandatory | ✅ Complies | Mọi Component & Store mới đều đi kèm Unit Tests (Jest + React Testing Library). |
+| 4. Authentication Required | ✅ Complies | Route `/admin/templates` được bảo vệ bởi Role-based Protected Route (`AdminGuard`). |
+| 6. AI Disclaimer | ✅ Complies | Mọi vị trí hiển thị tài liệu/chat AI đều đính kèm component `Disclaimer`. |
+| 8. FBA Frontend | ✅ Complies | Module `admin` được tách riêng trong `src/features/admin/`, update các feature `auth`, `chat`. |
+| 9. Professional UI | ✅ Complies | Áp dụng phối màu Xanh Sky Sky & White, typography chuẩn, hiệu ứng animations hiện đại. |
+| 10. Clean Code & No Hardcode | ✅ Complies | API endpoints và constants được định nghĩa tập trung trong `constants.ts`. |
 
 ---
 
 ## Technical approach
 
-### Backend (Database & API)
-- Tạo thêm Entity `DocumentVersion` gồm: `Id`, `DocumentId` (FK), `Content` (lưu HTML/Markdown), `CreatedAt`.
-- Quan hệ: Một `Document` có nhiều `DocumentVersions`.
-- Logic lưu: Nội dung đầu tiên AI sinh ra sẽ là version 1. Mỗi lần user bấm Save từ UI sẽ gọi `POST /api/documents/{id}/versions` kèm nội dung mới.
-- Thêm `GET /api/documents/{id}/versions` để Frontend lấy danh sách lịch sử.
-
-### Frontend (Editor & Export)
-- **Rich Text Editor**: Sử dụng `tiptap` (hiện đại, headless, rất dễ tuỳ biến UI cho React) hoặc `react-quill`. AI sinh Markdown, Frontend có thể parse Markdown thành HTML để nhét vào Tiptap, sau đó Tiptap sẽ quản lý bằng HTML.
-- **Export PDF**: Dùng `react-to-print` (kích hoạt print dialog của trình duyệt, xuất PDF sắc nét và native nhất).
-- **Export DOCX**: Dùng `html-to-docx` kết hợp `file-saver` để convert HTML content từ Editor sang định dạng file Word.
-- **UI Version History**: Trong modal xem tài liệu, sẽ có một nút "Lịch sử". Bấm vào sẽ mở ra một sidebar nhỏ bên phải modal liệt kê timeline các lần sửa.
+### Frontend Architecture & Styling
+- **Theme**: Cấu hình CSS variables trong `index.css` cho `--primary` (Sky Blue `#0284c7`), `--background` (`#ffffff`), `--muted` (`#f8fafc`), glassmorphism backdrop blurs và CSS keyframe animations.
+- **Auth & JWT Parsing**: Sử dụng `jwt-decode` hoặc regex base64 decode để trích xuất `role` (hoặc `http://schemas.microsoft.com/ws/2008/06/identity/claims/role`) và `AiQuota` từ JWT Token.
+- **Admin Feature (`src/features/admin/`)**:
+  - `types/admin.types.ts`: PromptTemplate interfaces.
+  - `services/templateAdminService.ts`: CRUD Axios calls to `/api/admin/templates`.
+  - `components/AdminTemplatePage.tsx`: Data table + Modal editor cho prompt.
+  - `components/AdminGuard.tsx`: Wrapper kiểm tra `user.roles.includes('Admin')`.
+- **Mentor Review & Feedback (`src/features/chat/components/`)**:
+  - `CommentDrawer.tsx`: Sub-component hiển thị trong `DocumentViewer` để quản lý danh sách comment.
+  - `DocumentFeedback.tsx`: Sub-component nằm ở footer của document content với 2 nút Thumbs Up/Down & Popup text box.
+- **Editor & Export**:
+  - Nâng cấp `RichTextEditor.tsx` với TipTap starter-kit + Toolbar buttons.
+  - `exportUtils.ts`: Sử dụng `html-to-docx` và `react-to-print` / `html2pdf` cho FE client-side export.
 
 ---
 
 ## Tasks
 
-### Group 1: Backend Database & Entities (TDD)
-- [x] **T01** — Cập nhật Entity `Document` (thêm collection `Versions`) và tạo `DocumentVersion` Entity. Cấu hình EF Core, tạo Migration & Update Database.
-- [x] **T02** — Cập nhật `IDocumentRepository`: thêm method `AddVersionAsync` và `GetVersionsAsync`. Viết tests kiểm chứng EF Core behavior.
-- [x] **T03** — Tạo `IDocumentService` / `DocumentService` để xử lý logic: khi AI tạo document mới, đồng thời tự insert version đầu tiên vào lịch sử. Khi user gọi API, tạo version tiếp theo.
+### Group 4: Frontend Auth, Quota & Admin Management
+- [x] **T10** — `frontend/src/features/auth/`: Cập nhật `authStore.ts` và `auth.types.ts` để decode JWT claims (Roles, AiQuota). Cập nhật `Navbar.tsx` hiển thị badge AI Quota & Admin link nếu user có role `Admin`. Viết test cho `authStore`.
+- [x] **T11** — `frontend/src/features/admin/`: Tạo feature `admin` gồm `admin.types.ts`, `templateAdminService.ts`, `AdminGuard.tsx` và `AdminTemplatePage.tsx`. Cấu hình route `/admin/templates` trong `App.tsx`. Viết unit test cho `AdminGuard` và `AdminTemplatePage`.
+- [x] **T12** — `frontend/src/features/admin/components/TemplateEditModal.tsx`: Tạo modal chỉnh sửa `PromptTemplate` (SystemPrompt textarea, IsActive toggle, DocumentType select). Đấu nối API `PUT /api/admin/templates/{id}`. Viết unit test.
 
-### Group 2: Backend API (TDD)
-- [x] **T04** — Viết tests và implement `DocumentController` với các endpoints: `POST /api/documents/{id}/versions` và `GET /api/documents/{id}/versions`.
+### Group 5: Frontend Mentor Review & Feedback System
+- [x] **T13** — `frontend/src/features/chat/components/DocumentFeedback.tsx`: Tạo component Feedback (Like/Dislike buttons, text feedback input, status indicator). Tích hợp vào `DocumentViewer.tsx` và gọi API `POST /api/documents/{id}/feedback`. Viết unit test.
+- [x] **T14** — `frontend/src/features/chat/components/CommentDrawer.tsx`: Tạo tab/drawer Comments trong `DocumentViewer.tsx` để xem danh sách nhận xét và gửi comment mới qua `POST /api/documents/{documentId}/comments`. Viết unit test.
 
-### Group 3: Frontend Rich Text Editor (TDD)
-- [x] **T05** — Cài đặt thư viện Editor (vd: `@tiptap/react`, `@tiptap/starter-kit`) và thư viện parse markdown (`marked` hoặc tương tự).
-- [x] **T06** — Tạo component `RichTextEditor.tsx` có thanh công cụ (Bold, Italic, List). Viết test render component.
-- [x] **T07** — Tích hợp `RichTextEditor` vào `DocumentViewer` thay thế ReactMarkdown hiện tại. Gắn sự kiện nút "Lưu" để gọi API `POST` lên backend.
-
-### Group 4: Frontend Export & History (TDD)
-- [x] **T08** — Cài đặt các thư viện `react-to-print`, `html-to-docx`, `file-saver`.
-- [x] **T09** — Viết các tiện ích (utils) hoặc components hỗ trợ xuất file PDF và DOCX. Cập nhật test.
-- [x] **T10** — Thiết kế UI cho Version History (danh sách thời gian) trong `DocumentViewer` và liên kết với API `GET /versions`. Polish UI toàn bộ Modal.
+### Group 6: Rich Text Editor, FE Export & UI Sky Blue Polish
+- [x] **T15** — `frontend/src/shared/components/RichTextEditor.tsx`: Nâng cấp RichTextEditor với toolbar đa dạng (Headings, Bold, Italic, Bullet/Numbered List, Blockquote, Clear formatting). Cập nhật unit test.
+- [x] **T16** — `frontend/src/features/chat/utils/exportUtils.ts`: Cập nhật/tối ưu hàm xuất file client-side hoàn toàn cho `.docx` và `.pdf` từ HTML content. Viết unit test cho `exportUtils`.
+- [x] **T17** — `frontend/src/index.css` & UI Theme: Cấu hình bảng màu Sky Blue & White (`#0284c7`, `#e0f2fe`, `#ffffff`), thêm micro-animations (fade-in, slide-up, pulse-glow), glassmorphism hiệu ứng cho Navbar/Sidebar/Modals. Đảm bảo 100% frontend unit tests pass.

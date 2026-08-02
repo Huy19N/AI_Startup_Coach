@@ -17,7 +17,12 @@ public class Document
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+    // Feedback
+    public bool? IsLiked { get; set; }
+    public string? FeedbackText { get; set; }
+
     // Navigation
     public ChatSession ChatSession { get; set; } = null!;
     public ICollection<DocumentVersion> Versions { get; set; } = new List<DocumentVersion>();
+    public ICollection<DocumentComment> Comments { get; set; } = new List<DocumentComment>();
 }

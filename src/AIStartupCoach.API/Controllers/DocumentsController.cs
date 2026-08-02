@@ -1,5 +1,7 @@
 using System.Security.Claims;
+using AIStartupCoach.API.DTOs.Chat;
 using AIStartupCoach.API.DTOs.Documents;
+using AIStartupCoach.API.Models.Requests;
 using AIStartupCoach.API.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -44,6 +46,24 @@ public class DocumentsController : ControllerBase
         try
         {
             var result = await _documentService.GetVersionsAsync(UserId, id);
+            return Ok(result);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Forbid(ex.Message);
+        }
+    }
+
+    [HttpPost("{id}/feedback")]
+    public async Task<ActionResult<DocumentResponse>> ProvideFeedback(int id, [FromBody] DocumentFeedbackRequest request)
+    {
+        try
+        {
+            var result = await _documentService.ProvideFeedbackAsync(id, UserId, request);
             return Ok(result);
         }
         catch (KeyNotFoundException ex)

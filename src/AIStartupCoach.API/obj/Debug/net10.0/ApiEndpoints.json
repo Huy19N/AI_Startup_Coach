@@ -1,5 +1,124 @@
 [
   {
+    "ContainingType": "AIStartupCoach.API.Controllers.AdminTemplateController",
+    "Method": "GetAll",
+    "RelativePath": "api/admin/templates",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": [
+      {
+        "Type": "System.Collections.Generic.List\u00601[[AIStartupCoach.API.DTOs.Templates.PromptTemplateDto, AIStartupCoach.API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "AIStartupCoach.API.Controllers.AdminTemplateController",
+    "Method": "Create",
+    "RelativePath": "api/admin/templates",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "AIStartupCoach.API.DTOs.Templates.CreatePromptTemplateRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "AIStartupCoach.API.DTOs.Templates.PromptTemplateDto",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "AIStartupCoach.API.Controllers.AdminTemplateController",
+    "Method": "GetById",
+    "RelativePath": "api/admin/templates/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "AIStartupCoach.API.DTOs.Templates.PromptTemplateDto",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "AIStartupCoach.API.Controllers.AdminTemplateController",
+    "Method": "Update",
+    "RelativePath": "api/admin/templates/{id}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "request",
+        "Type": "AIStartupCoach.API.DTOs.Templates.UpdatePromptTemplateRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "AIStartupCoach.API.DTOs.Templates.PromptTemplateDto",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "AIStartupCoach.API.Controllers.AdminTemplateController",
+    "Method": "Delete",
+    "RelativePath": "api/admin/templates/{id}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "AIStartupCoach.API.Controllers.ApiKeysController",
     "Method": "GetUserApiKeys",
     "RelativePath": "api/api-keys",
@@ -259,6 +378,131 @@
     "ReturnTypes": [
       {
         "Type": "AIStartupCoach.API.DTOs.Chat.SendMessageResponse",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "AIStartupCoach.API.Controllers.CommentController",
+    "Method": "GetComments",
+    "RelativePath": "api/documents/{documentId}/comments",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "documentId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "AIStartupCoach.API.Controllers.CommentController",
+    "Method": "CreateComment",
+    "RelativePath": "api/documents/{documentId}/comments",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "documentId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "request",
+        "Type": "AIStartupCoach.API.Models.Requests.CreateCommentRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "AIStartupCoach.API.Controllers.DocumentsController",
+    "Method": "ProvideFeedback",
+    "RelativePath": "api/Documents/{id}/feedback",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "request",
+        "Type": "AIStartupCoach.API.Models.Requests.DocumentFeedbackRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "AIStartupCoach.API.DTOs.Chat.DocumentResponse",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "AIStartupCoach.API.Controllers.DocumentsController",
+    "Method": "CreateVersion",
+    "RelativePath": "api/Documents/{id}/versions",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "request",
+        "Type": "AIStartupCoach.API.DTOs.Documents.CreateVersionRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "AIStartupCoach.API.DTOs.Documents.DocumentVersionResponse",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "AIStartupCoach.API.Controllers.DocumentsController",
+    "Method": "GetVersions",
+    "RelativePath": "api/Documents/{id}/versions",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Collections.Generic.List\u00601[[AIStartupCoach.API.DTOs.Documents.DocumentVersionResponse, AIStartupCoach.API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
         "MediaTypes": [
           "text/plain",
           "application/json",

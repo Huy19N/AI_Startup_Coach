@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("AIStartupCoach.API")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ce02cc7d51fc605cdf7594e7668ad3149bcafe63")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6708d8c103b13d19bb8c379f75aebba2cda6a97e")]
 [assembly: System.Reflection.AssemblyProductAttribute("AIStartupCoach.API")]
 [assembly: System.Reflection.AssemblyTitleAttribute("AIStartupCoach.API")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

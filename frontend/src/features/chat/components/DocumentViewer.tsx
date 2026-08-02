@@ -16,12 +16,15 @@ import {
   History,
   Printer,
   Loader2,
-  Check
+  Check,
+  MessageSquare,
 } from 'lucide-react';
 import { Disclaimer } from '@/shared/components/Disclaimer';
 import { RichTextEditor } from '@/shared/components/RichTextEditor';
 import { documentService } from '../services/documentService';
-import { exportHtmlToDocx } from '../utils/exportUtils';
+import { exportHtmlToDocx, exportHtmlToPdf } from '../utils/exportUtils';
+import { DocumentFeedback } from './DocumentFeedback';
+import { CommentDrawer } from './CommentDrawer';
 import { marked } from 'marked';
 
 interface DocumentViewerProps {
@@ -32,6 +35,7 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({ documents }) => 
   const [selectedDoc, setSelectedDoc] = useState<DocumentItem | null>(null);
   const [editorContent, setEditorContent] = useState<string>('');
   const [showHistory, setShowHistory] = useState<boolean>(false);
+  const [showComments, setShowComments] = useState<boolean>(false);
   const [versions, setVersions] = useState<DocumentVersionItem[]>([]);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
@@ -49,6 +53,7 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({ documents }) => 
       }
       setEditorContent(html);
       setShowHistory(false);
+      setShowComments(false);
     }
   }, [selectedDoc]);
 
@@ -104,7 +109,8 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({ documents }) => 
   };
 
   const handlePrintPdf = () => {
-    window.print();
+    if (!selectedDoc) return;
+    exportHtmlToPdf(getDocLabel(selectedDoc.type), editorContent);
   };
 
   const handleExportDocx = () => {
@@ -238,9 +244,29 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({ documents }) => 
                   <span>PDF</span>
                 </button>
 
+                {/* Toggle Comments */}
+                <button
+                  onClick={() => {
+                    setShowComments(!showComments);
+                    if (!showComments) setShowHistory(false);
+                  }}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors border ${
+                    showComments 
+                      ? 'bg-sky-100 border-sky-300 text-sky-700 dark:bg-sky-950 dark:border-sky-800 dark:text-sky-300' 
+                      : 'border-border hover:bg-muted text-muted-foreground'
+                  }`}
+                  title="Nhận xét & Review"
+                >
+                  <MessageSquare className="w-3.5 h-3.5" />
+                  <span>Nhận xét</span>
+                </button>
+
                 {/* Toggle History */}
                 <button
-                  onClick={toggleHistory}
+                  onClick={() => {
+                    toggleHistory();
+                    if (!showHistory) setShowComments(false);
+                  }}
                   className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors border ${
                     showHistory 
                       ? 'bg-accent border-accent text-accent-foreground' 
@@ -261,14 +287,22 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({ documents }) => 
               </div>
             </div>
 
-            {/* Main Content Area + History Drawer */}
+            {/* Main Content Area + Drawers */}
             <div className="flex-1 overflow-hidden flex relative">
-              <div className="flex-1 overflow-y-auto p-6 space-y-4" ref={printRef}>
+              <div className="flex-1 overflow-y-auto p-6 space-y-6" ref={printRef}>
                 <RichTextEditor
                   content={editorContent}
                   onChange={(html) => setEditorContent(html)}
                 />
+
+                {/* Document Feedback Section */}
+                <div className="pt-4 border-t border-sky-100 dark:border-sky-900/30">
+                  <DocumentFeedback documentId={selectedDoc.id} />
+                </div>
               </div>
+
+              {/* Comments Drawer */}
+              {showComments && <CommentDrawer documentId={selectedDoc.id} />}
 
               {/* History Drawer */}
               {showHistory && (

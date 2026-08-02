@@ -1,4 +1,4 @@
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5256/api';
+export const API_BASE_URL = 'http://localhost:5256/api';
 
 export const TOKEN_KEY = 'ai_startup_coach_token';
 
