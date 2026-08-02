@@ -14,9 +14,9 @@ export const ChatPage = () => {
   }, [fetchSessions]);
 
   return (
-    <div className="flex-1 flex overflow-hidden relative">
+    <div className="flex-1 flex overflow-hidden relative h-full">
       <ChatSidebar />
-      <div className="flex-1 flex flex-col min-w-0 relative">
+      <div className="flex-1 flex flex-col min-w-0 relative h-full">
         <div className="absolute top-3 right-4 z-10 hidden sm:block">
           <button
             onClick={() => setShowRightPanel(!showRightPanel)}

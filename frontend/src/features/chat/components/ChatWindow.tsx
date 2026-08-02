@@ -33,8 +33,8 @@ export const ChatWindow = () => {
   }
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 bg-background">
-      <div className="border-b border-border bg-card/80 backdrop-blur px-6 py-4 flex items-center shadow-sm z-10 sticky top-0">
+    <div className="flex-1 flex flex-col min-w-0 bg-background h-full overflow-hidden">
+      <div className="border-b border-border bg-card/80 backdrop-blur px-6 py-4 flex items-center shadow-sm z-10 sticky top-0 shrink-0">
         <h2 className="font-semibold truncate">
           {currentSession?.title || 'Đang tải...'}
         </h2>

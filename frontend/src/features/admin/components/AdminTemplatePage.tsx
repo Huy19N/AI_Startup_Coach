@@ -45,7 +45,8 @@ export const AdminTemplatePage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 w-full space-y-6 animate-in fade-in duration-300">
+    <div className="flex-1 overflow-y-auto">
+      <div className="max-w-6xl mx-auto px-4 py-8 w-full space-y-6 animate-in fade-in duration-300">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-sky-100 dark:border-sky-900/30 pb-6">
         <div>
@@ -141,6 +142,7 @@ export const AdminTemplatePage: React.FC = () => {
           onSuccess={handleSaveSuccess}
         />
       )}
+    </div>
     </div>
   );
 };

@@ -7,8 +7,8 @@ export const ChatSidebar = () => {
   const { sessions, currentSession, selectSession, createNewSession, isLoading } = useChat();
 
   return (
-    <div className="w-72 bg-card border-r border-border flex flex-col h-full flex-shrink-0 animate-in slide-in-from-left-8 duration-300">
-      <div className="p-4 border-b border-border">
+    <div className="w-72 bg-card border-r border-border flex flex-col h-full shrink-0 animate-in slide-in-from-left-8 duration-300">
+      <div className="p-4 border-b border-border shrink-0">
         <button
           onClick={() => createNewSession()}
           disabled={isLoading}
