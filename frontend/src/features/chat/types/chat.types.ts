@@ -1,7 +1,7 @@
 export interface DocumentItem {
   id: number;
   chatSessionId: number;
-  type: string; // 'LeanCanvas' | 'SWOT' | string
+  type: string; // 'LeanCanvas' | 'SWOT' | 'BMC' | 'MVPPlan' | 'MarketingStrategy' | 'PitchOutline' | 'FundraisingGuide'
   content: string;
   createdAt: string;
 }

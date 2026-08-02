@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { DocumentItem } from '../types/chat.types';
-import { FileText, Eye, X, Layers, Activity } from 'lucide-react';
+import { FileText, Eye, X, Layers, Activity, Grid, Rocket, Target, Presentation, DollarSign } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import { Disclaimer } from '@/shared/components/Disclaimer';
 
 interface DocumentViewerProps {
   documents: DocumentItem[];
@@ -16,8 +17,31 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({ documents }) => 
         return <Layers className="w-4 h-4 text-blue-500" />;
       case 'swot':
         return <Activity className="w-4 h-4 text-emerald-500" />;
+      case 'bmc':
+        return <Grid className="w-4 h-4 text-purple-500" />;
+      case 'mvpplan':
+        return <Rocket className="w-4 h-4 text-orange-500" />;
+      case 'marketingstrategy':
+        return <Target className="w-4 h-4 text-red-500" />;
+      case 'pitchoutline':
+        return <Presentation className="w-4 h-4 text-indigo-500" />;
+      case 'fundraisingguide':
+        return <DollarSign className="w-4 h-4 text-green-600" />;
       default:
         return <FileText className="w-4 h-4 text-primary" />;
+    }
+  };
+
+  const getDocLabel = (type: string) => {
+    switch (type.toLowerCase()) {
+      case 'leancanvas': return 'Lean Canvas';
+      case 'swot': return 'Phân tích SWOT';
+      case 'bmc': return 'Mô hình Kinh doanh (BMC)';
+      case 'mvpplan': return 'Kế hoạch MVP';
+      case 'marketingstrategy': return 'Chiến lược Marketing';
+      case 'pitchoutline': return 'Dàn ý Pitching';
+      case 'fundraisingguide': return 'Cẩm nang Gọi vốn';
+      default: return type;
     }
   };
 
@@ -49,7 +73,7 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({ documents }) => 
                 </div>
                 <div>
                   <h4 className="text-sm font-medium leading-none mb-1 group-hover:text-primary transition-colors">
-                    {doc.type}
+                    {getDocLabel(doc.type)}
                   </h4>
                   <span className="text-[11px] text-muted-foreground">
                     {new Date(doc.createdAt).toLocaleDateString('vi-VN')}
@@ -72,7 +96,7 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({ documents }) => 
             <div className="p-4 border-b border-border flex items-center justify-between bg-muted/30">
               <div className="flex items-center gap-2">
                 {getDocIcon(selectedDoc.type)}
-                <h3 className="font-semibold text-lg">{selectedDoc.type}</h3>
+                <h3 className="font-semibold text-lg">{getDocLabel(selectedDoc.type)}</h3>
               </div>
               <button
                 onClick={() => setSelectedDoc(null)}
@@ -90,7 +114,8 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({ documents }) => 
               </article>
             </div>
 
-            <div className="p-4 border-t border-border flex justify-end bg-muted/20">
+            <div className="p-4 border-t border-border flex justify-between items-center bg-muted/20">
+              <Disclaimer />
               <button
                 onClick={() => setSelectedDoc(null)}
                 className="px-4 py-2 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"

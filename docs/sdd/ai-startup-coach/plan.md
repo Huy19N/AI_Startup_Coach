@@ -42,6 +42,6 @@ Source: brainstorm.md (v1), constitution.md (v1.1.0)
 - [x] **T01** — Cập nhật `src/AIStartupCoach.API/Templates/system-prompt.md`: Bổ sung hướng dẫn tạo các loại tài liệu: BMC, MVPPlan, MarketingStrategy, PitchOutline, FundraisingGuide. — *Kiểm tra thủ công*.
 
 ### Group 2: Frontend UI & Types (TDD)
-- [ ] **T02** — Cập nhật type `DocumentItem` trong `frontend/src/features/chat/types/chat.types.ts` để bao gồm các string literals mới.
-- [ ] **T03** — Tạo/cập nhật file test `frontend/src/features/chat/components/__tests__/DocumentViewer.test.tsx` (nếu chưa có) để kiểm tra việc render icons, label tiếng Việt và Disclaimer trong modal.
-- [ ] **T04** — Cập nhật `frontend/src/features/chat/components/DocumentViewer.tsx`: Thêm logic render icon, label thân thiện, và tích hợp `<Disclaimer />` vào modal theo đúng test đã viết.
+- [x] **T02** — Cập nhật type `DocumentItem` trong `frontend/src/features/chat/types/chat.types.ts` để bao gồm các string literals mới.
+- [x] **T03** — Tạo/cập nhật file test `frontend/src/features/chat/components/__tests__/DocumentViewer.test.tsx` (nếu chưa có) để kiểm tra việc render icons, label tiếng Việt và Disclaimer trong modal.
+- [x] **T04** — Cập nhật `frontend/src/features/chat/components/DocumentViewer.tsx`: Thêm logic render icon, label thân thiện, và tích hợp `<Disclaimer />` vào modal theo đúng test đã viết.
