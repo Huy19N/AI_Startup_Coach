@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../features/auth/stores/authStore';
-import { KeyRound, LogOut, MessageSquare, Sparkles, Shield } from 'lucide-react';
+import { KeyRound, LogOut, MessageSquare, Shield } from 'lucide-react';
 
 export const Navbar = () => {
   const { user, logout, isAuthenticated } = useAuthStore();
@@ -41,11 +41,6 @@ export const Navbar = () => {
           <div className="flex items-center gap-4">
             {isAuthenticated ? (
               <>
-                {/* AI Quota Badge */}
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-sky-50 dark:bg-sky-900/30 border border-sky-200/60 text-sky-700 dark:text-sky-300 text-xs font-semibold shadow-xs">
-                  <Sparkles className="w-3.5 h-3.5 text-sky-500 animate-pulse" />
-                  <span>AI Quota: <strong className="text-sky-600 dark:text-sky-400">{user?.aiQuota ?? 50}</strong>/50</span>
-                </div>
 
                 <Link to="/api-keys" className="text-sm font-medium text-slate-600 hover:text-sky-600 dark:text-slate-300 flex items-center gap-1 transition-colors">
                   <KeyRound className="w-4 h-4" />

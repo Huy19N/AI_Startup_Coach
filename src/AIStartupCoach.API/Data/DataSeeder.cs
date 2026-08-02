@@ -30,8 +30,7 @@ public static class DataSeeder
             {
                 UserName = adminEmail,
                 Email = adminEmail,
-                FullName = "System Admin",
-                AiQuota = 999999
+                FullName = "System Admin"
             };
 
             var createPowerUser = await userManager.CreateAsync(adminUser, "Admin@123");
@@ -39,12 +38,6 @@ public static class DataSeeder
             {
                 await userManager.AddToRoleAsync(adminUser, "Admin");
             }
-        }
-        else if (adminUser.AiQuota < 100)
-        {
-            // Auto-reset admin quota on startup
-            adminUser.AiQuota = 999999;
-            await userManager.UpdateAsync(adminUser);
         }
 
         using var scope = serviceProvider.CreateScope();

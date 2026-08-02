@@ -4,14 +4,13 @@ import { TOKEN_KEY } from '@/shared/utils/constants';
 
 interface AuthStore extends AuthState {
   setCredentials: (user: User, token: string) => void;
-  updateUserQuota: (quota: number) => void;
   logout: () => void;
 }
 
-export const parseJwtClaims = (token: string): { roles: string[]; aiQuota: number } => {
+export const parseJwtClaims = (token: string): { roles: string[] } => {
   try {
     const base64Url = token.split('.')[1];
-    if (!base64Url) return { roles: [], aiQuota: 50 };
+    if (!base64Url) return { roles: [] };
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
     const jsonPayload = decodeURIComponent(
       atob(base64)
@@ -24,11 +23,10 @@ export const parseJwtClaims = (token: string): { roles: string[]; aiQuota: numbe
     // .NET claims mapping
     const rawRoles = payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || payload.role || payload.roles || [];
     const roles = Array.isArray(rawRoles) ? rawRoles : [rawRoles];
-    const aiQuota = payload.AiQuota !== undefined ? Number(payload.AiQuota) : payload.aiQuota !== undefined ? Number(payload.aiQuota) : 50;
 
-    return { roles, aiQuota };
+    return { roles };
   } catch {
-    return { roles: [], aiQuota: 50 };
+    return { roles: [] };
   }
 };
 
@@ -45,12 +43,11 @@ if (initialUserJson) {
 }
 
 if (initialToken && !initialUser) {
-  const { roles, aiQuota } = parseJwtClaims(initialToken);
+  const { roles } = parseJwtClaims(initialToken);
   initialUser = {
     email: '',
     fullName: 'User',
-    roles,
-    aiQuota
+    roles
   };
 }
 
@@ -61,23 +58,14 @@ export const useAuthStore = create<AuthStore>((set) => ({
   isLoading: false,
   error: null,
   setCredentials: (user, token) => {
-    const { roles, aiQuota } = parseJwtClaims(token);
+    const { roles } = parseJwtClaims(token);
     const updatedUser: User = {
       ...user,
-      roles: user.roles && user.roles.length > 0 ? user.roles : roles,
-      aiQuota: user.aiQuota !== undefined ? user.aiQuota : aiQuota
+      roles: user.roles && user.roles.length > 0 ? user.roles : roles
     };
     localStorage.setItem(TOKEN_KEY, token);
     localStorage.setItem('user_info', JSON.stringify(updatedUser));
     set({ user: updatedUser, token, isAuthenticated: true, error: null });
-  },
-  updateUserQuota: (quota: number) => {
-    set((state) => {
-      if (!state.user) return state;
-      const updatedUser = { ...state.user, aiQuota: quota };
-      localStorage.setItem('user_info', JSON.stringify(updatedUser));
-      return { user: updatedUser };
-    });
   },
   logout: () => {
     localStorage.removeItem(TOKEN_KEY);

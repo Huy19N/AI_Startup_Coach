@@ -2,7 +2,6 @@ export interface User {
   email: string;
   fullName: string;
   roles: string[];
-  aiQuota?: number;
 }
 
 export interface AuthResponse {

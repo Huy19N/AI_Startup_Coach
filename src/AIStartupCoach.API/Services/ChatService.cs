@@ -1,7 +1,7 @@
 using AIStartupCoach.API.DTOs.Chat;
 using AIStartupCoach.API.Entities;
 using AIStartupCoach.API.Helpers;
-using Microsoft.AspNetCore.Identity;
+
 using AIStartupCoach.API.Repositories.Interfaces;
 using AIStartupCoach.API.Services.Interfaces;
 
@@ -13,7 +13,7 @@ public class ChatService : IChatService
     private readonly IApiKeyService _apiKeyService;
     private readonly ILlmService _llmService;
     private readonly IDocumentRepository _documentRepository;
-    private readonly UserManager<ApplicationUser> _userManager;
+
     private readonly ITemplateRepository _templateRepository;
 
     public ChatService(
@@ -21,14 +21,12 @@ public class ChatService : IChatService
         IApiKeyService apiKeyService, 
         ILlmService llmService,
         IDocumentRepository documentRepository,
-        UserManager<ApplicationUser> userManager,
         ITemplateRepository templateRepository)
     {
         _chatRepository = chatRepository;
         _apiKeyService = apiKeyService;
         _llmService = llmService;
         _documentRepository = documentRepository;
-        _userManager = userManager;
         _templateRepository = templateRepository;
     }
 
@@ -106,13 +104,6 @@ public class ChatService : IChatService
         if (string.IsNullOrEmpty(apiKey))
             throw new UnauthorizedAccessException($"Không tìm thấy API Key khả dụng cho nhà cung cấp '{request.Provider}'. Vui lòng thêm API Key trước khi chat.");
 
-        // Check quota
-        var user = await _userManager.FindByIdAsync(userId);
-        if (user == null)
-            throw new UnauthorizedAccessException("Không tìm thấy người dùng");
-
-        if (user.AiQuota <= 0)
-            throw new InvalidOperationException("Bạn đã hết lượt gọi AI. Vui lòng nâng cấp tài khoản hoặc liên hệ quản trị viên.");
 
         // Get chat history for context
         var history = await _chatRepository.GetMessagesBySessionIdAsync(sessionId);
@@ -154,14 +145,14 @@ public class ChatService : IChatService
         // Get system prompt
         string systemPrompt = await GetSystemPromptAsync(session.Stage);
 
-        int llmCallCount = 0;
+
 
         // Call LLM
         string aiResponseText;
         try
         {
             aiResponseText = await _llmService.SendMessageAsync(request.Provider, apiKey, model ?? string.Empty, systemPrompt, llmMessages);
-            llmCallCount++;
+
         }
         catch (Exception ex)
         {
@@ -192,13 +183,13 @@ public class ChatService : IChatService
             try
             {
                 string safetyResponse = await _llmService.SendMessageAsync(request.Provider, apiKey, model ?? string.Empty, safetyPrompt, safetyMessages);
-                llmCallCount++;
+
                 if (!safetyResponse.Contains("PASS"))
                 {
                     llmMessages.Add(new LlmMessage { Role = "assistant", Content = aiResponseText });
                     llmMessages.Add(new LlmMessage { Role = "user", Content = $"Kết quả của bạn không vượt qua kiểm duyệt an toàn. Các lỗi cần sửa:\n{safetyResponse}\n\nHãy sinh lại toàn bộ câu trả lời, sửa các lỗi trên." });
                     aiResponseText = await _llmService.SendMessageAsync(request.Provider, apiKey, model ?? string.Empty, systemPrompt, llmMessages);
-                    llmCallCount++;
+
                     extractedDocs = TagParserHelper.ExtractDocuments(aiResponseText);
                 }
             }
@@ -249,9 +240,7 @@ public class ChatService : IChatService
         };
         await _chatRepository.AddMessageAsync(aiMessage);
 
-        // Decrease Quota
-        user.AiQuota -= llmCallCount;
-        await _userManager.UpdateAsync(user);
+
 
         return new SendMessageResponse
         {
