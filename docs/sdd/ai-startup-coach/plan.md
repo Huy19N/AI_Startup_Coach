@@ -51,7 +51,7 @@ Source: brainstorm.md (v1), constitution.md (v1.1.0)
 - [x] **T03** — Tạo `IDocumentService` / `DocumentService` để xử lý logic: khi AI tạo document mới, đồng thời tự insert version đầu tiên vào lịch sử. Khi user gọi API, tạo version tiếp theo.
 
 ### Group 2: Backend API (TDD)
-- [ ] **T04** — Viết tests và implement `DocumentController` với các endpoints: `POST /api/documents/{id}/versions` và `GET /api/documents/{id}/versions`.
+- [x] **T04** — Viết tests và implement `DocumentController` với các endpoints: `POST /api/documents/{id}/versions` và `GET /api/documents/{id}/versions`.
 
 ### Group 3: Frontend Rich Text Editor (TDD)
 - [ ] **T05** — Cài đặt thư viện Editor (vd: `@tiptap/react`, `@tiptap/starter-kit`) và thư viện parse markdown (`marked` hoặc tương tự).
