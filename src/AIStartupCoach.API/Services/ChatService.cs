@@ -128,7 +128,7 @@ public class ChatService : IChatService
         string aiResponseText;
         try
         {
-            aiResponseText = await _llmService.SendMessageAsync(request.Provider, apiKey, model, systemPrompt, llmMessages);
+            aiResponseText = await _llmService.SendMessageAsync(request.Provider, apiKey, model ?? string.Empty, systemPrompt, llmMessages);
         }
         catch (Exception ex)
         {

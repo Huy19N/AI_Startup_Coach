@@ -14,6 +14,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<ChatSession> ChatSessions { get; set; } = null!;
     public DbSet<ChatMessage> ChatMessages { get; set; } = null!;
     public DbSet<Document> Documents { get; set; } = null!;
+    public DbSet<DocumentVersion> DocumentVersions { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -56,6 +57,16 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
             entity.HasOne(e => e.ChatSession)
                   .WithMany(s => s.Documents)
                   .HasForeignKey(e => e.ChatSessionId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // DocumentVersion configuration
+        builder.Entity<DocumentVersion>(entity =>
+        {
+            entity.HasIndex(e => e.DocumentId);
+            entity.HasOne(e => e.Document)
+                  .WithMany(d => d.Versions)
+                  .HasForeignKey(e => e.DocumentId)
                   .OnDelete(DeleteBehavior.Cascade);
         });
     }

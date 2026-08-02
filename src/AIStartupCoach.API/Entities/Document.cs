@@ -19,4 +19,5 @@ public class Document
 
     // Navigation
     public ChatSession ChatSession { get; set; } = null!;
+    public ICollection<DocumentVersion> Versions { get; set; } = new List<DocumentVersion>();
 }

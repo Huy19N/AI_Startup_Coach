@@ -1,47 +1,64 @@
-# Plan: AI Startup Coach — Phase 3 (Extended Startup Documents)
+# Plan: AI Startup Coach — Phase 4 (Document Editor, Export, Version History)
 
 Source: brainstorm.md (v1), constitution.md (v1.1.0)
 
 ## Spec summary
 ### Functional requirements
-1. **FR-31**: Hỗ trợ AI tạo thêm 5 loại tài liệu startup chuẩn: BMC (Business Model Canvas), MVP Plan, Marketing Strategy, Pitch Outline, Fundraising Guide.
-2. **FR-32**: System prompt được cập nhật để hướng dẫn AI xuất ra các thẻ `<document type="...">` tương ứng cho các loại tài liệu này.
-3. **FR-33**: Giao diện `DocumentViewer` hiển thị đúng icon và label (tên tiếng Việt) cho các loại tài liệu mới.
-4. **FR-34**: Thêm Disclaimer "Chỉ mang tính tham khảo" vào màn hình xem chi tiết tài liệu (Document Modal) để tuân thủ Principle 6 (AI Disclaimer).
+1. **FR-41 (Rich Text Editor)**: Người dùng có thể chỉnh sửa nội dung tài liệu (Lean Canvas, SWOT, etc.) bằng một trình soạn thảo trực quan (WYSIWYG) thay vì phải sửa text thuần.
+2. **FR-42 (Version History)**: Hệ thống ghi nhận lịch sử các lần chỉnh sửa. Khi người dùng lưu (Save) tài liệu, một phiên bản (revision) mới được tạo và lưu trữ. Người dùng có thể xem lại danh sách các phiên bản cũ của một tài liệu.
+3. **FR-43 (Export)**: Người dùng có thể tải tài liệu về máy tính dưới định dạng PDF hoặc DOCX thông qua các nút thao tác trực tiếp trên giao diện Frontend (không phụ thuộc vào server-side rendering).
 
 ### Acceptance criteria
-- [ ] Gửi yêu cầu tạo "BMC" hoặc "MVP Plan", AI trả về đúng thẻ XML và hệ thống lưu thành công vào DB.
-- [ ] `DocumentViewer` hiển thị icon riêng biệt, đẹp mắt cho từng loại document mới.
-- [ ] `DocumentViewer` hiển thị tên tài liệu thân thiện (vd: "Kế hoạch MVP" thay vì "MVPPlan").
-- [ ] Khi click xem chi tiết tài liệu, có component Disclaimer hiển thị mờ ở cuối modal.
-- [ ] Typescript definitions (`chat.types.ts`) được cập nhật để bao gồm các string literals cho các loại doc mới.
+- [ ] Mở một tài liệu sẽ hiển thị giao diện soạn thảo văn bản phong phú (in đậm, list, heading...).
+- [ ] Người dùng chỉnh sửa và nhấn "Lưu" -> Gọi API thành công, DB tạo ra bản ghi lịch sử mới.
+- [ ] Có nút "Lịch sử" để liệt kê và xem các phiên bản đã lưu trước đó của tài liệu.
+- [ ] Bấm nút "Xuất PDF" -> Trình duyệt bật hộp thoại in/lưu PDF nội dung tài liệu.
+- [ ] Bấm nút "Xuất DOCX" -> Tải xuống file `.docx` chứa nội dung đã soạn thảo.
+
+---
 
 ## Constitution compliance check
 | Principle | Status | Notes |
 |---|---|---|
-| 1. TDD Mandatory | ✅ Complies | Cập nhật tests cho DocumentViewer component (frontend). Backend Regex đã generic nên không cần đổi logic cốt lõi. |
-| 3. Template-Driven AI Output | ✅ Complies | Cập nhật `system-prompt.md` để enforce format các loại tài liệu mới. |
-| 6. AI Disclaimer | ✅ Complies | Bổ sung Disclaimer vào Document Modal (hiện mới chỉ có ở ChatMessage). |
-| 9. Professional UI | ✅ Complies | Thêm Lucide icons chuyên biệt cho từng loại tài liệu, nâng cao UX/UI. |
+| 1. TDD Mandatory | ✅ Complies | Mọi entity mới (`DocumentVersion`), API endpoint, và util xuất file đều phải có Unit Test đi kèm trước khi code. |
+| 2. Layered Architecture | ✅ Complies | Xây dựng theo cấu trúc chuẩn: `DocumentController` -> `IDocumentService` -> `IDocumentRepository`. |
+| 8. FBA Frontend | ✅ Complies | Các component mới (`RichTextEditor`, `ExportButtons`) sẽ được tổ chức gọn gàng trong feature `chat` hoặc `documents`. |
+| 9. Professional UI | ✅ Complies | Sử dụng thư viện Editor hiện đại (như Tiptap) để trải nghiệm gõ mượt mà như Notion. |
+
+---
 
 ## Technical approach
-- **Backend**:
-  - Logic parsing (Regex) và entity `Document` đã được thiết kế mở (chấp nhận mọi chuỗi cho trường `Type`), nên không cần sửa code C# hay DB schema.
-  - Chỉ cần sửa đổi `system-prompt.md` để liệt kê rõ các loại tài liệu AI có thể tạo và yêu cầu AI dùng đúng tên Type (vd: `BMC`, `MVPPlan`, `MarketingStrategy`, `PitchOutline`, `FundraisingGuide`).
-- **Frontend**:
-  - Cập nhật `chat.types.ts` để type hint (intellisense) các doc types mới.
-  - Sửa `DocumentViewer.tsx`:
-    - Cập nhật hàm `getDocIcon` để map các types mới với các icon phù hợp từ `lucide-react` (ví dụ: `Grid` cho BMC, `Rocket` cho MVP Plan, `Target` cho Marketing, `Presentation` cho Pitch, `DollarSign` cho Fundraising).
-    - Thêm hàm `getDocLabel` để map tên tiếng Việt (ví dụ: `Kế hoạch MVP`).
-    - Import và chèn `<Disclaimer />` component vào modal chi tiết của tài liệu, ở dưới cùng.
-  - Viết/cập nhật unit tests cho `DocumentViewer.tsx` đảm bảo render đúng icon và disclaimer.
+
+### Backend (Database & API)
+- Tạo thêm Entity `DocumentVersion` gồm: `Id`, `DocumentId` (FK), `Content` (lưu HTML/Markdown), `CreatedAt`.
+- Quan hệ: Một `Document` có nhiều `DocumentVersions`.
+- Logic lưu: Nội dung đầu tiên AI sinh ra sẽ là version 1. Mỗi lần user bấm Save từ UI sẽ gọi `POST /api/documents/{id}/versions` kèm nội dung mới.
+- Thêm `GET /api/documents/{id}/versions` để Frontend lấy danh sách lịch sử.
+
+### Frontend (Editor & Export)
+- **Rich Text Editor**: Sử dụng `tiptap` (hiện đại, headless, rất dễ tuỳ biến UI cho React) hoặc `react-quill`. AI sinh Markdown, Frontend có thể parse Markdown thành HTML để nhét vào Tiptap, sau đó Tiptap sẽ quản lý bằng HTML.
+- **Export PDF**: Dùng `react-to-print` (kích hoạt print dialog của trình duyệt, xuất PDF sắc nét và native nhất).
+- **Export DOCX**: Dùng `html-to-docx` kết hợp `file-saver` để convert HTML content từ Editor sang định dạng file Word.
+- **UI Version History**: Trong modal xem tài liệu, sẽ có một nút "Lịch sử". Bấm vào sẽ mở ra một sidebar nhỏ bên phải modal liệt kê timeline các lần sửa.
+
+---
 
 ## Tasks
 
-### Group 1: Backend Prompting
-- [x] **T01** — Cập nhật `src/AIStartupCoach.API/Templates/system-prompt.md`: Bổ sung hướng dẫn tạo các loại tài liệu: BMC, MVPPlan, MarketingStrategy, PitchOutline, FundraisingGuide. — *Kiểm tra thủ công*.
+### Group 1: Backend Database & Entities (TDD)
+- [x] **T01** — Cập nhật Entity `Document` (thêm collection `Versions`) và tạo `DocumentVersion` Entity. Cấu hình EF Core, tạo Migration & Update Database.
+- [ ] **T02** — Cập nhật `IDocumentRepository`: thêm method `AddVersionAsync` và `GetVersionsAsync`. Viết tests kiểm chứng EF Core behavior.
+- [ ] **T03** — Tạo `IDocumentService` / `DocumentService` để xử lý logic: khi AI tạo document mới, đồng thời tự insert version đầu tiên vào lịch sử. Khi user gọi API, tạo version tiếp theo.
 
-### Group 2: Frontend UI & Types (TDD)
-- [x] **T02** — Cập nhật type `DocumentItem` trong `frontend/src/features/chat/types/chat.types.ts` để bao gồm các string literals mới.
-- [x] **T03** — Tạo/cập nhật file test `frontend/src/features/chat/components/__tests__/DocumentViewer.test.tsx` (nếu chưa có) để kiểm tra việc render icons, label tiếng Việt và Disclaimer trong modal.
-- [x] **T04** — Cập nhật `frontend/src/features/chat/components/DocumentViewer.tsx`: Thêm logic render icon, label thân thiện, và tích hợp `<Disclaimer />` vào modal theo đúng test đã viết.
+### Group 2: Backend API (TDD)
+- [ ] **T04** — Viết tests và implement `DocumentController` với các endpoints: `POST /api/documents/{id}/versions` và `GET /api/documents/{id}/versions`.
+
+### Group 3: Frontend Rich Text Editor (TDD)
+- [ ] **T05** — Cài đặt thư viện Editor (vd: `@tiptap/react`, `@tiptap/starter-kit`) và thư viện parse markdown (`marked` hoặc tương tự).
+- [ ] **T06** — Tạo component `RichTextEditor.tsx` có thanh công cụ (Bold, Italic, List). Viết test render component.
+- [ ] **T07** — Tích hợp `RichTextEditor` vào `DocumentViewer` thay thế ReactMarkdown hiện tại. Gắn sự kiện nút "Lưu" để gọi API `POST` lên backend.
+
+### Group 4: Frontend Export & History (TDD)
+- [ ] **T08** — Cài đặt các thư viện `react-to-print`, `html-to-docx`, `file-saver`.
+- [ ] **T09** — Viết các tiện ích (utils) hoặc components hỗ trợ xuất file PDF và DOCX. Cập nhật test.
+- [ ] **T10** — Thiết kế UI cho Version History (danh sách thời gian) trong `DocumentViewer` và liên kết với API `GET /versions`. Polish UI toàn bộ Modal.
