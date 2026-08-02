@@ -1,12 +1,14 @@
 import { useEffect, useRef } from 'react';
 import { useChat } from '../hooks/useChat';
+import { useChatStore } from '../stores/chatStore';
 import { ChatMessage } from './ChatMessage';
 import { ChatInput } from './ChatInput';
-import { Rocket } from 'lucide-react';
+import { Rocket, AlertCircle, X } from 'lucide-react';
 
 export const ChatWindow = () => {
-  const { currentSession, messages, isLoading } = useChat();
+  const { currentSession, messages, isLoading, error } = useChat();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { setError } = useChatStore();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -14,7 +16,7 @@ export const ChatWindow = () => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, error]);
 
   if (!currentSession && !isLoading) {
     return (
@@ -57,6 +59,21 @@ export const ChatWindow = () => {
           </div>
         )}
       </div>
+
+      {error && (
+        <div className="mx-6 mb-4 mt-2 p-3 bg-rose-50 border border-rose-200 rounded-lg flex items-start gap-3 text-rose-600 shadow-sm animate-in fade-in slide-in-from-bottom-2">
+          <AlertCircle className="w-5 h-5 mt-0.5 shrink-0" />
+          <div className="flex-1 text-sm font-medium">
+            {error}
+          </div>
+          <button 
+            onClick={() => setError(null)}
+            className="p-1 hover:bg-rose-100 rounded-md transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
       <ChatInput />
     </div>

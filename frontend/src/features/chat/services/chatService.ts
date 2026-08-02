@@ -20,7 +20,7 @@ export const chatService = {
   },
 
   async getSessionHistory(sessionId: string | number): Promise<ChatMessage[]> {
-    const response = await axiosInstance.get(`/chat/sessions/${sessionId}/history`);
+    const response = await axiosInstance.get(`/chat/sessions/${sessionId}/messages`);
     return response.data;
   },
 

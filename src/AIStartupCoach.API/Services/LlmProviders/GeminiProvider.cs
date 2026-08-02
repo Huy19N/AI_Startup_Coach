@@ -25,7 +25,20 @@ public class GeminiProvider : ILlmProvider
             parts = new[] { new { text = systemPrompt } }
         };
 
+        var mergedMessages = new List<LlmMessage>();
         foreach (var msg in messages)
+        {
+            if (mergedMessages.Count > 0 && mergedMessages.Last().Role == msg.Role)
+            {
+                mergedMessages.Last().Content += "\n\n" + msg.Content;
+            }
+            else
+            {
+                mergedMessages.Add(new LlmMessage { Role = msg.Role, Content = msg.Content });
+            }
+        }
+
+        foreach (var msg in mergedMessages)
         {
             contents.Add(new
             {
@@ -43,7 +56,7 @@ public class GeminiProvider : ILlmProvider
 
         if (string.IsNullOrWhiteSpace(model))
         {
-            model = "gemini-1.5-flash";
+            model = "gemini-flash-latest";
         }
         var url = $"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={apiKey}";
         
@@ -59,11 +72,26 @@ public class GeminiProvider : ILlmProvider
         }
 
         using var jsonDoc = JsonDocument.Parse(responseContent);
-        return jsonDoc.RootElement
-            .GetProperty("candidates")[0]
-            .GetProperty("content")
-            .GetProperty("parts")[0]
-            .GetProperty("text")
-            .GetString() ?? string.Empty;
+        var candidates = jsonDoc.RootElement.GetProperty("candidates");
+        if (candidates.GetArrayLength() == 0) return string.Empty;
+
+        var firstCandidate = candidates[0];
+        if (!firstCandidate.TryGetProperty("content", out var contentObj))
+        {
+            // Possibly blocked by safety filter
+            return "Xin lỗi, câu trả lời đã bị chặn bởi bộ lọc an toàn của Google Gemini.";
+        }
+
+        if (!contentObj.TryGetProperty("parts", out var parts) || parts.GetArrayLength() == 0)
+        {
+            return string.Empty;
+        }
+
+        if (!parts[0].TryGetProperty("text", out var textProp))
+        {
+            return string.Empty;
+        }
+
+        return textProp.GetString() ?? string.Empty;
     }
 }

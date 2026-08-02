@@ -19,6 +19,7 @@ export const useApiKeys = () => {
 
   const createKey = async (provider: string, keyValue: string, defaultModel?: string) => {
     setLoading(true);
+    setError(null);
     try {
       const data = await apiKeyService.addKey(provider, keyValue, defaultModel);
       addKey(data);
@@ -47,6 +48,7 @@ export const useApiKeys = () => {
 
   const verifyKey = async (provider: string, keyValue: string, defaultModel?: string) => {
     setLoading(true);
+    setError(null);
     try {
       return await apiKeyService.verifyKey(provider, keyValue, defaultModel);
     } catch (err: any) {

@@ -3,6 +3,32 @@ import { useApiKeys } from '../hooks/useApiKeys';
 import { PROVIDERS } from '@/shared/utils/constants';
 import { KeyRound, Plus } from 'lucide-react';
 
+const MODELS_BY_PROVIDER: Record<string, {id: string, name: string}[]> = {
+  gemini: [
+    { id: '', name: 'Mặc định (gemini-flash-latest)' },
+    { id: 'gemini-flash-latest', name: 'Gemini Flash Latest' },
+    { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash' },
+    { id: 'gemini-3.5-flash', name: 'Gemini 3.5 Flash' },
+    { id: 'gemini-3.6-flash', name: 'Gemini 3.6 Flash' }
+  ],
+  openai: [
+    { id: '', name: 'Mặc định (gpt-4o-mini)' },
+    { id: 'gpt-4o-mini', name: 'GPT-4o Mini' },
+    { id: 'gpt-4o', name: 'GPT-4o' }
+  ],
+  claude: [
+    { id: '', name: 'Mặc định (claude-3-haiku)' },
+    { id: 'claude-3-haiku-20240307', name: 'Claude 3 Haiku' },
+    { id: 'claude-3-5-sonnet-20240620', name: 'Claude 3.5 Sonnet' }
+  ],
+  groq: [
+    { id: '', name: 'Mặc định (llama3-8b-8192)' },
+    { id: 'llama3-8b-8192', name: 'Llama 3 8B' },
+    { id: 'llama3-70b-8192', name: 'Llama 3 70B' },
+    { id: 'mixtral-8x7b-32768', name: 'Mixtral 8x7B' }
+  ]
+};
+
 export const ApiKeyForm = () => {
   const [provider, setProvider] = useState(PROVIDERS[0].id);
   const [keyValue, setKeyValue] = useState('');
@@ -101,17 +127,21 @@ export const ApiKeyForm = () => {
         <div className="flex flex-col sm:flex-row gap-4 items-end">
           <div className="w-full sm:w-1/2 space-y-2">
             <label className="text-sm font-medium" htmlFor="defaultModel">Model Name (Tuỳ chọn)</label>
-            <input
+            <select
               id="defaultModel"
-              type="text"
               className="w-full px-3 py-2 border rounded-md bg-transparent focus:outline-none focus:ring-2 focus:ring-primary/50 border-input"
-              placeholder={provider === 'gemini' ? 'Ví dụ: gemini-1.5-pro' : provider === 'openai' ? 'Ví dụ: gpt-4o' : 'Tên model cụ thể'}
               value={defaultModel}
               onChange={(e) => {
                 setDefaultModel(e.target.value);
                 setVerifyStatus('idle');
               }}
-            />
+            >
+              {MODELS_BY_PROVIDER[provider]?.map(m => (
+                <option key={m.id} value={m.id} className="bg-background">{m.name}</option>
+              )) || (
+                <option value="" className="bg-background">Mặc định</option>
+              )}
+            </select>
           </div>
         </div>
       </div>

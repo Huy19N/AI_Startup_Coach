@@ -92,6 +92,7 @@ export const useChat = () => {
       return true;
     } catch (err: any) {
       useChatStore.getState().setError(err.response?.data?.message || 'Lỗi khi gửi tin nhắn');
+      useChatStore.getState().setMessages(useChatStore.getState().messages.filter(m => m.id !== tempId));
       return false;
     } finally {
       useChatStore.getState().setSending(false);

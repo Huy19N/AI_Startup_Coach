@@ -1015,6 +1015,10 @@
             "type": "string",
             "nullable": true
           },
+          "stage": {
+            "type": "string",
+            "nullable": true
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time"
@@ -1263,6 +1267,10 @@
           "provider": {
             "minLength": 1,
             "type": "string"
+          },
+          "targetStage": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -1277,6 +1285,10 @@
             "$ref": "#/components/schemas/ChatMessageResponse"
           },
           "ideaSummary": {
+            "type": "string",
+            "nullable": true
+          },
+          "stage": {
             "type": "string",
             "nullable": true
           },
